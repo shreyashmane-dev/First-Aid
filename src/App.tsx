@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/common/Navbar';
 import { EmergencyBanner } from './components/common/EmergencyBanner';
@@ -17,11 +17,13 @@ import { VideoConsultationRoom } from './components/telemedicine/VideoConsultati
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AuthModal } from './components/auth/AuthModal';
 import { PrivacyDataModal } from './components/patient/PrivacyDataModal';
+import { LandingPage } from './components/common/LandingPage';
 import type { DoctorProfile, Hospital } from './types';
 import confetti from 'canvas-confetti';
 import { Calendar, Video, Stethoscope } from 'lucide-react';
 
 const MainContent: React.FC = () => {
+  const { currentUser } = useAuth();
   const { doctors, appointments } = useApp();
 
   const [activeTab, setActiveTab] = useState<string>('home');
@@ -57,7 +59,14 @@ const MainContent: React.FC = () => {
         <EmergencyBanner onFindHospitals={() => setActiveTab('hospitals')} />
 
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16">
-        {activeTab === 'home' && (
+        {activeTab === 'home' && (!currentUser ? (
+          <LandingPage
+            onOpenAuth={() => setIsAuthOpen(true)}
+            onExploreFirstAid={() => setActiveTab('first_aid')}
+            onExploreHospitals={() => setActiveTab('hospitals')}
+            onExploreAI={() => setActiveTab('ai_chat')}
+          />
+        ) : (
           <PatientDashboard
             onNavigate={(tab) => setActiveTab(tab)}
             onOpenMedicalProfile={() => setIsMedicalProfileOpen(true)}
@@ -67,7 +76,7 @@ const MainContent: React.FC = () => {
             }}
             onJoinVideoCall={(meetingId) => setActiveVideoMeetingId(meetingId)}
           />
-        )}
+        ))}
 
         {activeTab === 'first_aid' && (
           <FirstAidLibrary
