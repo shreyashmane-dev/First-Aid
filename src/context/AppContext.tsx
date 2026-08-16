@@ -23,6 +23,7 @@ interface AppContextType {
   hospitals: Hospital[];
   addHospital: (hospital: Omit<Hospital, 'hospitalId' | 'createdAt' | 'updatedAt'>) => void;
   doctors: DoctorProfile[];
+  addRegisteredDoctor: (doctor: DoctorProfile) => void;
   verifyDoctor: (doctorId: string, status: 'verified' | 'rejected' | 'suspended') => void;
   appointments: Appointment[];
   bookAppointment: (
@@ -152,6 +153,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedAt: new Date().toISOString()
     }));
     addAuditLog('MEDICAL_PROFILE_UPDATED', 'MedicalProfile', medicalProfile.patientUid);
+  };
+
+  const addRegisteredDoctor = (doctor: DoctorProfile) => {
+    setDoctors((prev) => [doctor, ...prev.filter(d => d.doctorId !== doctor.doctorId)]);
   };
 
   const addHospital = (hospitalData: Omit<Hospital, 'hospitalId' | 'createdAt' | 'updatedAt'>) => {
@@ -295,6 +300,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         hospitals,
         addHospital,
         doctors,
+        addRegisteredDoctor,
         verifyDoctor,
         appointments,
         bookAppointment,
