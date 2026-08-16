@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User, UserRole, PatientProfile, DoctorProfile } from '../types';
-import { INITIAL_USERS, INITIAL_PATIENT_PROFILE, INITIAL_DOCTORS } from '../services/mockData';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -21,17 +20,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('first_aid_user');
-    return saved ? JSON.parse(saved) : INITIAL_USERS[0];
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [patientProfile, setPatientProfile] = useState<PatientProfile | null>(() => {
     const saved = localStorage.getItem('first_aid_patient_profile');
-    return saved ? JSON.parse(saved) : INITIAL_PATIENT_PROFILE;
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(() => {
     const saved = localStorage.getItem('first_aid_doctor_profile');
-    return saved ? JSON.parse(saved) : INITIAL_DOCTORS[0];
+    return saved ? JSON.parse(saved) : null;
   });
 
   const userRole: UserRole = currentUser?.role || 'patient';
@@ -47,36 +46,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (patientProfile) {
       localStorage.setItem('first_aid_patient_profile', JSON.stringify(patientProfile));
+    } else {
+      localStorage.removeItem('first_aid_patient_profile');
     }
   }, [patientProfile]);
 
   useEffect(() => {
     if (doctorProfile) {
       localStorage.setItem('first_aid_doctor_profile', JSON.stringify(doctorProfile));
+    } else {
+      localStorage.removeItem('first_aid_doctor_profile');
     }
   }, [doctorProfile]);
 
   const login = async (email: string, role: UserRole): Promise<boolean> => {
-    let matchedUser = INITIAL_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!matchedUser) {
-      matchedUser = {
-        uid: `user_${Date.now()}`,
-        email,
-        role,
-        displayName: email.split('@')[0],
+    const nameFromEmail = email.split('@')[0];
+    const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+
+    const newUser: User = {
+      uid: `usr_${Date.now()}`,
+      email,
+      role,
+      displayName: formattedName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setCurrentUser(newUser);
+
+    if (role === 'patient') {
+      setPatientProfile({
+        uid: newUser.uid,
+        contactNumber: '+1 (555) 000-1122',
+        emergencyContact: {
+          name: 'Primary Contact',
+          relationship: 'Family',
+          phone: '+1 (555) 911-0000'
+        },
+        shareProfileWithDoctor: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      };
-    } else {
-      matchedUser = { ...matchedUser, role };
+      });
     }
-    setCurrentUser(matchedUser);
+
     return true;
   };
 
   const logout = () => {
     setCurrentUser(null);
+    setPatientProfile(null);
+    setDoctorProfile(null);
     localStorage.removeItem('first_aid_user');
+    localStorage.removeItem('first_aid_patient_profile');
+    localStorage.removeItem('first_aid_doctor_profile');
   };
 
   const registerPatient = async (email: string, name: string, phone?: string): Promise<boolean> => {
@@ -89,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
     const newProfile: PatientProfile = {
       uid: newUser.uid,
       contactNumber: phone || '',
@@ -101,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
     setCurrentUser(newUser);
     setPatientProfile(newProfile);
     return true;
@@ -122,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
     const newDocProfile: DoctorProfile = {
       doctorId,
       userId,
@@ -130,51 +155,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       specialization,
       licenseNumber,
       licenseStatus: 'pending',
-      education: [{ degree: 'MD', university: 'Medical University', year: 2018 }],
+      education: [{ degree: 'MD', university: 'Medical University', year: 2020 }],
       experienceYears: 5,
       hospitalIds: ['hosp_01'],
-      hospitalName: 'City General Trauma & Emergency Center',
+      hospitalName: 'City General Trauma Center',
       professionalEmail: email,
       professionalPhone: '+1 (555) 000-1122',
-      bio: `Dr. ${name} is a specialist in ${specialization}. Account verification pending admin review.`,
-      consultationFee: 65,
+      bio: `Dr. ${name} is a specialist in ${specialization}.`,
+      consultationFee: 75,
       rating: 5.0,
       reviewsCount: 1,
       verificationStatus: 'pending',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
     setCurrentUser(newUser);
     setDoctorProfile(newDocProfile);
     return true;
   };
 
   const updatePatientProfile = (updated: Partial<PatientProfile>) => {
-    if (!patientProfile) return;
-    setPatientProfile(prev => prev ? { ...prev, ...updated, updatedAt: new Date().toISOString() } : null);
+    setPatientProfile((prev) => (prev ? { ...prev, ...updated, updatedAt: new Date().toISOString() } : null));
   };
 
   const updateDoctorProfile = (updated: Partial<DoctorProfile>) => {
-    if (!doctorProfile) return;
-    setDoctorProfile(prev => prev ? { ...prev, ...updated, updatedAt: new Date().toISOString() } : null);
+    setDoctorProfile((prev) => (prev ? { ...prev, ...updated, updatedAt: new Date().toISOString() } : null));
   };
 
   const switchRoleDemo = (role: UserRole) => {
-    if (role === 'patient') {
-      setCurrentUser(INITIAL_USERS[0]);
-    } else if (role === 'doctor') {
-      setCurrentUser(INITIAL_USERS[1]);
-    } else if (role === 'admin') {
-      setCurrentUser(INITIAL_USERS[2]);
+    if (currentUser) {
+      setCurrentUser({ ...currentUser, role });
     } else {
-      setCurrentUser({
-        uid: 'med_001',
-        email: 'staff@firstaidhospital.org',
-        role: 'medical_staff',
-        displayName: 'Nurse Clara (Triage)',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+      login(`demo.${role}@firstaidhospital.org`, role);
     }
   };
 
@@ -201,6 +214,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };

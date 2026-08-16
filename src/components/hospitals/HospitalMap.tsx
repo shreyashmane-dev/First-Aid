@@ -46,13 +46,20 @@ export const HospitalMap: React.FC<HospitalMapProps> = ({ onSelectHospital }) =>
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
 
+  const [realHospitals, setRealHospitals] = useState<Hospital[]>([]);
+
   useEffect(() => {
     mapsTrailService.getCurrentLocation().then(coords => {
       setUserLocation(coords);
+      mapsTrailService.fetchRealNearbyHospitals(coords, maxDistance).then(fetched => {
+        if (fetched.length > 0) setRealHospitals(fetched);
+      });
     });
-  }, []);
+  }, [maxDistance]);
 
-  const filteredHospitals = mapsTrailService.filterHospitals(hospitals, userLocation, {
+  const allAvailableHospitals = realHospitals.length > 0 ? realHospitals : hospitals;
+
+  const filteredHospitals = mapsTrailService.filterHospitals(allAvailableHospitals, userLocation, {
     query: searchQuery,
     maxDistanceKm: maxDistance,
     emergencyAvailableOnly: emergencyOnly,
