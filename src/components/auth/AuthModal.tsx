@@ -39,59 +39,77 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [staffBadgeNumber, setStaffBadgeNumber] = useState('');
 
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
+    setErrorMessage(null);
 
-    if (!email || !password) return;
+    if (!email || !password) {
+      setErrorMessage('Please provide both email and password.');
+      return;
+    }
 
-    if (mode === 'login') {
-      await login(email, selectedRole);
-      setFeedback('Signed in successfully!');
-      setTimeout(() => {
-        onClose();
-      }, 500);
-    } else {
-      if (selectedRole === 'patient') {
-        await registerPatient(email, fullName || 'Registered Patient', phone);
-      } else if (selectedRole === 'doctor') {
-        const docId = `doc_${Date.now()}`;
-        const newDoc: DoctorProfile = {
-          doctorId: docId,
-          userId: `usr_${Date.now()}`,
-          name: fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName || 'Specialist'}`,
-          photoUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80',
-          specialization,
-          licenseNumber: licenseNumber || 'MD-LIC-8891',
-          licenseStatus: 'verified',
-          education: [{ degree: 'MD', university: 'Medical University', year: 2020 }],
-          experienceYears: 6,
-          hospitalIds: ['hosp_01'],
-          hospitalName: hospitalName || 'City General Hospital',
-          professionalEmail: email,
-          professionalPhone: phone || '+1 (555) 000-1122',
-          bio: bio || `Dr. ${fullName} is a board-certified specialist in ${specialization}.`,
-          consultationFee: 80,
-          rating: 5.0,
-          reviewsCount: 1,
-          verificationStatus: 'verified',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
+    try {
+      if (mode === 'login') {
+        await login(email, password, selectedRole);
+        setFeedback('Signed in successfully via Firebase Auth!');
+        setTimeout(() => {
+          onClose();
+        }, 500);
+      } else {
+        if (selectedRole === 'patient') {
+          await registerPatient(email, password, fullName || 'Registered Patient', phone);
+        } else if (selectedRole === 'doctor') {
+          const docName = fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName || 'Specialist'}`;
+          await registerDoctor(email, password, docName, specialization, licenseNumber || 'MD-LIC-8891');
+          
+          const newDoc: DoctorProfile = {
+            doctorId: `doc_${Date.now()}`,
+            userId: `usr_${Date.now()}`,
+            name: docName,
+            photoUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80',
+            specialization,
+            licenseNumber: licenseNumber || 'MD-LIC-8891',
+            licenseStatus: 'verified',
+            education: [{ degree: 'MD', university: 'Medical University', year: 2020 }],
+            experienceYears: 6,
+            hospitalIds: ['hosp_01'],
+            hospitalName: hospitalName || 'City General Hospital',
+            professionalEmail: email,
+            professionalPhone: phone || '+1 (555) 000-1122',
+            bio: bio || `Dr. ${fullName} is a board-certified specialist in ${specialization}.`,
+            consultationFee: 80,
+            rating: 5.0,
+            reviewsCount: 1,
+            verificationStatus: 'verified',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          addRegisteredDoctor(newDoc);
+        } else if (selectedRole === 'medical_staff') {
+          await login(email, password, 'medical_staff');
+        }
 
-        await registerDoctor(email, newDoc.name, specialization, licenseNumber);
-        addRegisteredDoctor(newDoc);
-      } else if (selectedRole === 'medical_staff') {
-        await login(email, 'medical_staff');
+        setFeedback(`Account registered successfully as ${selectedRole.replace('_', ' ').toUpperCase()} in Firebase!`);
+        setTimeout(() => {
+          onClose();
+        }, 600);
       }
-
-      setFeedback(`Account registered successfully as ${selectedRole.replace('_', ' ').toUpperCase()}!`);
-      setTimeout(() => {
-        onClose();
-      }, 600);
+    } catch (err: any) {
+      console.error('Firebase Auth error:', err);
+      let msg = err?.message || 'Authentication failed.';
+      if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password') || msg.includes('auth/user-not-found')) {
+        msg = 'Invalid email or password. Please check your credentials or click Sign Up to register.';
+      } else if (msg.includes('auth/email-already-in-use')) {
+        msg = 'An account with this email address already exists. Please click Sign In.';
+      } else if (msg.includes('auth/weak-password')) {
+        msg = 'Password must be at least 6 characters long.';
+      }
+      setErrorMessage(msg);
     }
   };
 
@@ -143,6 +161,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             Sign In
           </button>
         </div>
+
+        {/* Error Alert */}
+        {errorMessage && (
+          <div className="p-3 bg-red-950/70 border border-red-500/50 rounded-2xl text-red-300 text-xs font-bold flex items-center gap-2">
+            <span className="text-red-400">⚠️</span>
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* Feedback Alert */}
         {feedback && (

@@ -15,10 +15,10 @@ interface AuthContextType {
   userRole: UserRole;
   patientProfile: PatientProfile | null;
   doctorProfile: DoctorProfile | null;
-  login: (email: string, role: UserRole, password?: string) => Promise<boolean>;
+  login: (email: string, password?: string, role?: UserRole) => Promise<boolean>;
   logout: () => void;
-  registerPatient: (email: string, name: string, password?: string, phone?: string) => Promise<boolean>;
-  registerDoctor: (email: string, name: string, specialization: string, licenseNumber: string, password?: string) => Promise<boolean>;
+  registerPatient: (email: string, password: string, name: string, phone?: string) => Promise<boolean>;
+  registerDoctor: (email: string, password: string, name: string, specialization: string, licenseNumber: string) => Promise<boolean>;
   updatePatientProfile: (updated: Partial<PatientProfile>) => void;
   updateDoctorProfile: (updated: Partial<DoctorProfile>) => void;
   switchRoleDemo: (role: UserRole) => void;
@@ -149,69 +149,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [doctorProfile]);
 
-  const login = async (email: string, role: UserRole, password?: string): Promise<boolean> => {
+  // Strict Firebase Auth Login
+  const login = async (email: string, password?: string, role?: UserRole): Promise<boolean> => {
     const pwd = password || 'Password123!';
 
-    if (auth) {
-      try {
-        const cred = await signInWithEmailAndPassword(auth, email, pwd);
-        const fbUser = cred.user;
-
-        const userDocRef = doc(db, 'users', fbUser.uid);
-        const userSnap = await getDoc(userDocRef);
-        let userRoleChoice = role;
-        let displayName = fbUser.displayName || email.split('@')[0];
-
-        if (userSnap.exists()) {
-          userRoleChoice = userSnap.data().role || role;
-          displayName = userSnap.data().displayName || displayName;
-        }
-
-        const newUser: User = {
-          uid: fbUser.uid,
-          email: fbUser.email || email,
-          role: userRoleChoice,
-          displayName,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        setCurrentUser(newUser);
-        return true;
-      } catch (err) {
-        console.warn('Firebase Auth sign-in fallback:', err);
-      }
+    if (!auth) {
+      throw new Error('Firebase Authentication is not initialized.');
     }
 
-    // Fallback local sign-in
-    const nameFromEmail = email.split('@')[0];
-    const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+    // Call real Firebase Authentication API
+    const cred = await signInWithEmailAndPassword(auth, email, pwd);
+    const fbUser = cred.user;
+
+    const userDocRef = doc(db, 'users', fbUser.uid);
+    const userSnap = await getDoc(userDocRef);
+    let userRoleChoice: UserRole = role || 'patient';
+    let displayName = fbUser.displayName || email.split('@')[0];
+
+    if (userSnap.exists()) {
+      userRoleChoice = userSnap.data().role || userRoleChoice;
+      displayName = userSnap.data().displayName || displayName;
+    }
 
     const newUser: User = {
-      uid: `usr_${Date.now()}`,
-      email,
-      role,
-      displayName: formattedName,
+      uid: fbUser.uid,
+      email: fbUser.email || email,
+      role: userRoleChoice,
+      displayName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
     setCurrentUser(newUser);
 
-    if (role === 'patient') {
-      const patProfile: PatientProfile = {
-        uid: newUser.uid,
-        contactNumber: '+1 (555) 000-1122',
-        emergencyContact: {
-          name: 'Primary Contact',
-          relationship: 'Family',
-          phone: '+1 (555) 911-0000'
-        },
-        shareProfileWithDoctor: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setPatientProfile(patProfile);
+    if (userRoleChoice === 'patient') {
+      const patDocRef = doc(db, 'patients', fbUser.uid);
+      const patSnap = await getDoc(patDocRef);
+      if (patSnap.exists()) {
+        setPatientProfile(patSnap.data() as PatientProfile);
+      }
+    } else if (userRoleChoice === 'doctor') {
+      const docDocRef = doc(db, 'doctors', fbUser.uid);
+      const docSnap = await getDoc(docDocRef);
+      if (docSnap.exists()) {
+        setDoctorProfile(docSnap.data() as DoctorProfile);
+      }
     }
 
     return true;
@@ -229,48 +211,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('first_aid_doctor_profile');
   };
 
-  const registerPatient = async (email: string, name: string, password?: string, phone?: string): Promise<boolean> => {
-    const pwd = password || 'Password123!';
-    let uid = `pat_${Date.now()}`;
-
-    if (auth) {
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-        uid = cred.user.uid;
-
-        // Save real user document into Firestore
-        await setDoc(doc(db, 'users', uid), {
-          uid,
-          email,
-          role: 'patient',
-          displayName: name,
-          phone: phone || '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-
-        // Save real patient profile into Firestore
-        const newProfile: PatientProfile = {
-          uid,
-          contactNumber: phone || '',
-          emergencyContact: {
-            name: 'Primary Emergency Contact',
-            relationship: 'Family',
-            phone: phone || '+1 (555) 911-0000'
-          },
-          shareProfileWithDoctor: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        await setDoc(doc(db, 'patients', uid), newProfile);
-        setPatientProfile(newProfile);
-      } catch (err) {
-        console.warn('Firebase registerPatient fallback:', err);
-      }
+  // Strict Firebase Auth Patient Registration
+  const registerPatient = async (
+    email: string,
+    password: string,
+    name: string,
+    phone?: string
+  ): Promise<boolean> => {
+    if (!auth) {
+      throw new Error('Firebase Authentication is not initialized.');
     }
 
-    const newUser: User = {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    await setDoc(doc(db, 'users', uid), {
       uid,
       email,
       role: 'patient',
@@ -278,10 +233,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       phone: phone || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    });
 
     const newProfile: PatientProfile = {
-      uid: newUser.uid,
+      uid,
       contactNumber: phone || '',
       emergencyContact: {
         name: 'Primary Emergency Contact',
@@ -293,48 +248,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString()
     };
 
+    await setDoc(doc(db, 'patients', uid), newProfile);
+
+    const newUser: User = {
+      uid,
+      email,
+      role: 'patient',
+      displayName: name,
+      phone: phone || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
     setCurrentUser(newUser);
     setPatientProfile(newProfile);
     return true;
   };
 
+  // Strict Firebase Auth Doctor Registration
   const registerDoctor = async (
     email: string,
+    password: string,
     name: string,
     specialization: string,
-    licenseNumber: string,
-    password?: string
+    licenseNumber: string
   ): Promise<boolean> => {
-    const pwd = password || 'Password123!';
-    let userId = `doc_${Date.now()}_user`;
-    const doctorId = `doc_${Date.now()}`;
-
-    if (auth) {
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-        userId = cred.user.uid;
-
-        await setDoc(doc(db, 'users', userId), {
-          uid: userId,
-          email,
-          role: 'doctor',
-          displayName: name,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      } catch (err) {
-        console.warn('Firebase registerDoctor fallback:', err);
-      }
+    if (!auth) {
+      throw new Error('Firebase Authentication is not initialized.');
     }
 
-    const newUser: User = {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const userId = cred.user.uid;
+    const doctorId = `doc_${userId}`;
+
+    await setDoc(doc(db, 'users', userId), {
       uid: userId,
       email,
       role: 'doctor',
       displayName: name,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    });
 
     const newDocProfile: DoctorProfile = {
       doctorId,
@@ -359,13 +313,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updatedAt: new Date().toISOString()
     };
 
-    if (db) {
-      try {
-        await setDoc(doc(db, 'doctors', doctorId), newDocProfile);
-      } catch (e) {
-        console.warn('Firestore doctor doc write note:', e);
-      }
-    }
+    await setDoc(doc(db, 'doctors', doctorId), newDocProfile);
+
+    const newUser: User = {
+      uid: userId,
+      email,
+      role: 'doctor',
+      displayName: name,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
     setCurrentUser(newUser);
     setDoctorProfile(newDocProfile);
@@ -397,8 +354,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchRoleDemo = (role: UserRole) => {
     if (currentUser) {
       setCurrentUser({ ...currentUser, role });
-    } else {
-      login(`demo.${role}@firstaidhospital.org`, role);
     }
   };
 
