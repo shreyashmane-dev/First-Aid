@@ -8,7 +8,7 @@ import {
   onAuthStateChanged
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -44,67 +44,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const userRole: UserRole = currentUser?.role || 'patient';
 
-  // Real Firebase Auth listener
+  // Real Firebase Auth & Firestore Real-Time User Document Listener
   useEffect(() => {
     if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
+    let unsubUserDoc: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (fbUser: FirebaseUser | null) => {
+      if (unsubUserDoc) {
+        unsubUserDoc();
+        unsubUserDoc = null;
+      }
+
       if (fbUser) {
         try {
-          // Fetch real user metadata from Firestore
           const userDocRef = doc(db, 'users', fbUser.uid);
-          const userSnap = await getDoc(userDocRef);
 
-          let role: UserRole = 'patient';
-          let displayName = fbUser.displayName || fbUser.email?.split('@')[0] || 'User';
+          unsubUserDoc = onSnapshot(
+            userDocRef,
+            async (userSnap) => {
+              let role: UserRole = 'patient';
+              let displayName = fbUser.displayName || fbUser.email?.split('@')[0] || 'User';
 
-          if (userSnap.exists()) {
-            const data = userSnap.data();
-            role = data.role || 'patient';
-            displayName = data.displayName || displayName;
-          } else {
-            // Save initial user doc to Firestore
-            await setDoc(userDocRef, {
-              uid: fbUser.uid,
-              email: fbUser.email,
-              role,
-              displayName,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            });
-          }
+              if (userSnap.exists()) {
+                const data = userSnap.data();
+                role = data.role || 'patient';
+                displayName = data.displayName || displayName;
+              } else {
+                await setDoc(userDocRef, {
+                  uid: fbUser.uid,
+                  email: fbUser.email,
+                  role,
+                  displayName,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                });
+              }
 
-          const appUser: User = {
-            uid: fbUser.uid,
-            email: fbUser.email || '',
-            role,
-            displayName,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+              const appUser: User = {
+                uid: fbUser.uid,
+                email: fbUser.email || '',
+                role,
+                displayName,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
 
-          setCurrentUser(appUser);
+              setCurrentUser(appUser);
 
-          // Fetch patient or doctor profile from Firestore
-          if (role === 'patient') {
-            const patDocRef = doc(db, 'patients', fbUser.uid);
-            const patSnap = await getDoc(patDocRef);
-            if (patSnap.exists()) {
-              setPatientProfile(patSnap.data() as PatientProfile);
+              if (role === 'patient') {
+                const patDocRef = doc(db, 'patients', fbUser.uid);
+                const patSnap = await getDoc(patDocRef);
+                if (patSnap.exists()) {
+                  setPatientProfile(patSnap.data() as PatientProfile);
+                }
+              } else if (role === 'doctor') {
+                const docDocRef = doc(db, 'doctors', fbUser.uid);
+                const docSnap = await getDoc(docDocRef);
+                if (docSnap.exists()) {
+                  setDoctorProfile(docSnap.data() as DoctorProfile);
+                }
+              }
+            },
+            (err) => {
+              console.warn('Firestore user doc real-time listener note:', err.message);
             }
-          } else if (role === 'doctor') {
-            const docDocRef = doc(db, 'doctors', fbUser.uid);
-            const docSnap = await getDoc(docDocRef);
-            if (docSnap.exists()) {
-              setDoctorProfile(docSnap.data() as DoctorProfile);
-            }
-          }
+          );
         } catch (err) {
           console.warn('Firestore user fetch note:', err);
         }
+      } else {
+        setCurrentUser(null);
+        setPatientProfile(null);
+        setDoctorProfile(null);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubUserDoc) unsubUserDoc();
+    };
   }, []);
 
   useEffect(() => {
