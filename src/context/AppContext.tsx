@@ -129,38 +129,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Sync appointments from Firestore
     try {
-      const unsubApts = onSnapshot(collection(db, 'appointments'), (snap) => {
-        if (!snap.empty) {
-          const list: Appointment[] = [];
-          snap.forEach(docSnap => list.push(docSnap.data() as Appointment));
-          setAppointments(prev => {
-            const merged = [...list];
-            prev.forEach(p => {
-              if (!merged.some(m => m.appointmentId === p.appointmentId)) {
-                merged.push(p);
-              }
+      const unsubApts = onSnapshot(
+        collection(db, 'appointments'),
+        (snap) => {
+          if (!snap.empty) {
+            const list: Appointment[] = [];
+            snap.forEach(docSnap => list.push(docSnap.data() as Appointment));
+            setAppointments(prev => {
+              const merged = [...list];
+              prev.forEach(p => {
+                if (!merged.some(m => m.appointmentId === p.appointmentId)) {
+                  merged.push(p);
+                }
+              });
+              return merged;
             });
-            return merged;
-          });
+          }
+        },
+        (err) => {
+          console.warn('Firestore appointments listener note:', err.message);
         }
-      });
+      );
 
       // Sync doctors from Firestore
-      const unsubDocs = onSnapshot(collection(db, 'doctors'), (snap) => {
-        if (!snap.empty) {
-          const list: DoctorProfile[] = [];
-          snap.forEach(docSnap => list.push(docSnap.data() as DoctorProfile));
-          setDoctors(prev => {
-            const merged = [...list];
-            prev.forEach(p => {
-              if (!merged.some(m => m.doctorId === p.doctorId)) {
-                merged.unshift(p);
-              }
+      const unsubDocs = onSnapshot(
+        collection(db, 'doctors'),
+        (snap) => {
+          if (!snap.empty) {
+            const list: DoctorProfile[] = [];
+            snap.forEach(docSnap => list.push(docSnap.data() as DoctorProfile));
+            setDoctors(prev => {
+              const merged = [...list];
+              prev.forEach(p => {
+                if (!merged.some(m => m.doctorId === p.doctorId)) {
+                  merged.unshift(p);
+                }
+              });
+              return merged;
             });
-            return merged;
-          });
+          }
+        },
+        (err) => {
+          console.warn('Firestore doctors listener note:', err.message);
         }
-      });
+      );
 
       return () => {
         unsubApts();
