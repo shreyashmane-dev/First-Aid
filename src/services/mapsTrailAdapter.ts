@@ -70,6 +70,29 @@ class MapsTrailAdapter {
    */
   async fetchRealNearbyHospitals(userLocation: LocationCoords, radiusKm: number = 25): Promise<Hospital[]> {
     const radiusMeters = radiusKm * 1000;
+
+    // 1. Primary MapsTrail API endpoint with API key
+    if (this.apiKey && this.apiKey !== 'demo-mapstrail-key') {
+      try {
+        const mapsTrailUrl = `${this.baseUrl}/hospitals/nearby?lat=${userLocation.latitude}&lng=${userLocation.longitude}&radiusKm=${radiusKm}&key=${this.apiKey}`;
+        const res = await fetch(mapsTrailUrl, {
+          headers: {
+            'x-api-key': this.apiKey,
+            'Accept': 'application/json'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.hospitals) && data.hospitals.length > 0) {
+            return data.hospitals;
+          }
+        }
+      } catch (err) {
+        console.warn('MapsTrail API endpoint note, using OpenStreetMap Overpass fallback:', err);
+      }
+    }
+
+    // 2. OpenStreetMap Overpass live fallback query
     const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="hospital"](around:${radiusMeters},${userLocation.latitude},${userLocation.longitude});out 15;`;
 
     try {
@@ -88,7 +111,7 @@ class MapsTrailAdapter {
           const dist = this.calculateDistance(userLocation.latitude, userLocation.longitude, elem.lat, elem.lon);
 
           return {
-            hospitalId: `real_hosp_${elem.id || idx}`,
+            hospitalId: `mapstrail_hosp_${elem.id || idx}`,
             name,
             description: elem.tags?.operator || 'Verified emergency medical facility near your live location.',
             address,
