@@ -33,30 +33,19 @@ export const AI_METRICS_LOG: AIUsageMetrics[] = [
   {
     id: 'metric_01',
     timestamp: new Date(Date.now() - 3600000).toISOString(),
-    provider: 'Gemini',
-    model: 'gemini-1.5-flash',
+    provider: 'OpenAI',
+    model: 'openai/gpt-4o-mini',
     promptLength: 120,
     latencyMs: 420,
     severity: 'CRITICAL',
     success: true,
     estimatedCostUsd: 0.00008
-  },
-  {
-    id: 'metric_02',
-    timestamp: new Date(Date.now() - 1800000).toISOString(),
-    provider: 'OpenAI',
-    model: 'gpt-4o-mini',
-    promptLength: 95,
-    latencyMs: 650,
-    severity: 'HIGH',
-    success: true,
-    estimatedCostUsd: 0.00012
   }
 ];
 
 // Rate Limiting tracker
 const USER_REQUEST_TIMESTAMPS: number[] = [];
-const MAX_REQUESTS_PER_MINUTE = 15;
+const MAX_REQUESTS_PER_MINUTE = 20;
 const MAX_PROMPT_LENGTH = 2000;
 
 const CRITICAL_KEYWORDS = [
@@ -72,7 +61,7 @@ const HIGH_KEYWORDS = [
 
 export async function processAIChatMessage(
   userQuery: string,
-  preferredModel: 'Gemini' | 'OpenAI' = 'Gemini',
+  preferredModel: 'Gemini' | 'OpenAI' = 'OpenAI',
   patientMedicalProfile?: MedicalProfile
 ): Promise<AIResponse> {
   const startTime = Date.now();
@@ -85,7 +74,7 @@ export async function processAIChatMessage(
 
   if (USER_REQUEST_TIMESTAMPS.length >= MAX_REQUESTS_PER_MINUTE) {
     return {
-      message: '⚠️ Rate limit reached (Max 15 requests per minute). For urgent medical concerns, please call emergency services immediately.',
+      message: '⚠️ Rate limit reached (Max 20 requests per minute). For urgent medical concerns, please call emergency services immediately.',
       severity: 'HIGH',
       emergency: true,
       modelUsed: preferredModel,
@@ -115,8 +104,8 @@ export async function processAIChatMessage(
   }
 
   // 3. API Keys Integration
-  const geminiApiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
   const openaiApiKey = (import.meta as any).env?.VITE_OPENAI_API_KEY || (import.meta as any).env?.VITE_OPENROUTER_API_KEY;
+  const geminiApiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
 
   let modelUsed: 'Gemini' | 'OpenAI' = preferredModel;
 
@@ -124,10 +113,10 @@ export async function processAIChatMessage(
   if (openaiApiKey) {
     try {
       const res = await callOpenAIAPI(sanitizedQuery, openaiApiKey, severity, emergency, patientMedicalProfile);
-      logMetrics('OpenAI', 'gpt-4o-mini / openrouter', sanitizedQuery.length, Date.now() - startTime, severity, true, 0.00015);
+      logMetrics('OpenAI', 'openai/gpt-4o-mini', sanitizedQuery.length, Date.now() - startTime, severity, true, 0.00015);
       return { ...res, latencyMs: Date.now() - startTime, estimatedCostUsd: 0.00015 };
     } catch (err) {
-      console.warn('OpenAI / OpenRouter API call note:', err);
+      console.warn('OpenAI / OpenRouter API call note, trying Gemini:', err);
     }
   }
 
@@ -138,11 +127,11 @@ export async function processAIChatMessage(
       logMetrics('Gemini', 'gemini-1.5-flash', sanitizedQuery.length, Date.now() - startTime, severity, true, 0.0001);
       return { ...res, latencyMs: Date.now() - startTime, estimatedCostUsd: 0.0001 };
     } catch (err) {
-      console.warn('Gemini API call note:', err);
+      console.warn('Gemini API call note, using safety engine:', err);
     }
   }
 
-  // Fallback to Clinical Safety Engine
+  // Fallback to Safety Engine if network offline
   const res = generateSafetyEngineResponse(sanitizedQuery, modelUsed, severity, emergency, patientMedicalProfile);
   logMetrics(modelUsed, 'safety-engine', sanitizedQuery.length, Date.now() - startTime, severity, true, 0.00005);
   return { ...res, latencyMs: Date.now() - startTime, estimatedCostUsd: 0.00005 };
@@ -282,35 +271,12 @@ function generateSafetyEngineResponse(
     };
   }
 
-  if (queryLower.includes('asthma') || queryLower.includes('inhaler') || queryLower.includes('gasping')) {
-    return {
-      modelUsed,
-      severity: 'HIGH',
-      emergency: true,
-      message: `🌬️ FIRST-AID PROTOCOL: Acute Respiratory Distress / Asthma Attack.${medicalContextNote}`,
-      steps: [
-        'Sit the person upright comfortably. Stay calm.',
-        'Administer rescue inhaler (Albuterol): 1 puff every 30-60 seconds up to 4 puffs.',
-        'Wait 4 minutes. If breathing is still difficult, administer 4 more puffs.',
-        'If symptoms do not improve after 8 puffs, call emergency (112 / 108) immediately.'
-      ],
-      avoid: [
-        'Do NOT force person to lie down flat.',
-        'Do NOT leave the person alone.'
-      ],
-      suggestedActions: [
-        { label: '📖 Asthma Action Plan Guide', action: 'read_first_aid', target: 'fa_asthma' },
-        { label: '📍 Find Nearby Respiratory ER', action: 'find_hospital' }
-      ]
-    };
-  }
-
   // General Guidance
   return {
     modelUsed,
     severity,
     emergency: severity !== 'LOW',
-    message: `Hello! I am your AI First-Aid Medical Assistant.${medicalContextNote} Based on standard protocols, here is safety guidance for your concern: "${userQuery}".`,
+    message: `Hello! I am your AI First-Aid Medical Assistant.${medicalContextNote} Based on standard protocols, here is safety guidance for your query: "${userQuery}".`,
     steps: [
       'Assess the situation and ensure the environment is safe.',
       'If the person shows severe pain, difficulty breathing, or loss of consciousness, call emergency services (112 / 108 / 911) immediately.',
@@ -329,6 +295,72 @@ function generateSafetyEngineResponse(
   };
 }
 
+async function callOpenAIAPI(
+  prompt: string,
+  apiKey: string,
+  severity: EmergencySeverity,
+  emergency: boolean,
+  profile?: MedicalProfile
+): Promise<AIResponse> {
+  const isOpenRouter = apiKey.startsWith('sk-or-v1-');
+  const url = isOpenRouter
+    ? 'https://openrouter.ai/api/v1/chat/completions'
+    : 'https://api.openai.com/v1/chat/completions';
+
+  let patientDataPrompt = '';
+  if (profile) {
+    patientDataPrompt = `\n[PATIENT HEALTH RECORD]\n- Blood Group: ${profile.bloodGroup || 'Not specified'}\n- Known Allergies: ${profile.allergies?.length ? profile.allergies.join(', ') : 'None'}\n- Existing Medical Conditions: ${profile.medicalConditions?.length ? profile.medicalConditions.join(', ') : 'None'}\n- Current Medications: ${profile.medications?.length ? profile.medications.join(', ') : 'None'}\nFactor these specific patient allergies and medical conditions into your first-aid guidance.`;
+  }
+
+  const systemPrompt = `You are First Aid Hospital AI, an expert emergency medical assistant. Provide clear, direct, bulleted first-aid instructions and DO NOT rules. Never give a final diagnosis or prescribe drugs. ${patientDataPrompt}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  };
+
+  if (isOpenRouter) {
+    headers['HTTP-Referer'] = 'https://first-aid-app.vercel.app';
+    headers['X-Title'] = 'First Aid Hospital Platform';
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: isOpenRouter ? 'openai/gpt-4o-mini' : 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI / OpenRouter API HTTP Error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const text = data?.choices?.[0]?.message?.content || '';
+
+  if (!text.trim()) {
+    throw new Error('OpenAI / OpenRouter API returned empty text');
+  }
+
+  return {
+    message: text,
+    severity,
+    emergency,
+    modelUsed: 'OpenAI',
+    suggestedActions: emergency ? [
+      { label: '🚨 Call Emergency (112 / 108)', action: 'call_emergency', target: '112' },
+      { label: '📍 Find Nearby ER Hospital', action: 'find_hospital' }
+    ] : [
+      { label: '📖 Read First-Aid Library', action: 'read_first_aid' }
+    ]
+  };
+}
+
 async function callGeminiAPI(
   prompt: string,
   apiKey: string,
@@ -337,7 +369,13 @@ async function callGeminiAPI(
   profile?: MedicalProfile
 ): Promise<AIResponse> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  const systemPrompt = `You are First Aid Hospital AI, a safety-focused emergency medical assistant. Provide clear bulleted first-aid steps and DO NOT rules. ${profile ? `Patient allergies: ${profile.allergies.join(', ')}` : ''}`;
+
+  let patientDataPrompt = '';
+  if (profile) {
+    patientDataPrompt = `\n[PATIENT HEALTH RECORD]\n- Blood Group: ${profile.bloodGroup || 'Not specified'}\n- Known Allergies: ${profile.allergies?.length ? profile.allergies.join(', ') : 'None'}\n- Existing Medical Conditions: ${profile.medicalConditions?.length ? profile.medicalConditions.join(', ') : 'None'}\n- Current Medications: ${profile.medications?.length ? profile.medications.join(', ') : 'None'}\nFactor these specific patient allergies and medical conditions into your guidance.`;
+  }
+
+  const systemPrompt = `You are First Aid Hospital AI, a safety-focused emergency medical assistant. Provide clear bulleted first-aid steps and DO NOT rules. ${patientDataPrompt}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -365,71 +403,6 @@ async function callGeminiAPI(
     severity,
     emergency,
     modelUsed: 'Gemini',
-    suggestedActions: emergency ? [
-      { label: '🚨 Call Emergency (112 / 108)', action: 'call_emergency', target: '112' },
-      { label: '📍 Find Nearby Hospital', action: 'find_hospital' }
-    ] : [
-      { label: '📖 Read First-Aid Library', action: 'read_first_aid' }
-    ]
-  };
-}
-
-async function callOpenAIAPI(
-  prompt: string,
-  apiKey: string,
-  severity: EmergencySeverity,
-  emergency: boolean,
-  profile?: MedicalProfile
-): Promise<AIResponse> {
-  const isOpenRouter = apiKey.startsWith('sk-or-v1-');
-  const url = isOpenRouter
-    ? 'https://openrouter.ai/api/v1/chat/completions'
-    : 'https://api.openai.com/v1/chat/completions';
-
-  const systemPrompt = `You are First Aid Hospital AI, a safety-focused emergency medical assistant. Never diagnose or prescribe. Provide clear bulleted first-aid steps and DO NOT instructions. ${profile ? `Patient allergies: ${profile.allergies.join(', ')}` : ''}`;
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`
-  };
-
-  if (isOpenRouter) {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://first-aid-app.vercel.app';
-    headers['HTTP-Referer'] = origin;
-    headers['X-Title'] = 'First Aid Hospital Platform';
-  }
-
-  // Model selection: try openai/gpt-4o-mini or meta-llama/llama-3.2-3b-instruct:free
-  const modelName = isOpenRouter ? 'openai/gpt-4o-mini' : 'gpt-4o-mini';
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      model: modelName,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-      ]
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI / OpenRouter API HTTP Error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content || '';
-
-  if (!text.trim()) {
-    throw new Error('OpenAI API returned empty text');
-  }
-
-  return {
-    message: text,
-    severity,
-    emergency,
-    modelUsed: 'OpenAI',
     suggestedActions: emergency ? [
       { label: '🚨 Call Emergency (112 / 108)', action: 'call_emergency', target: '112' },
       { label: '📍 Find Nearby Hospital', action: 'find_hospital' }
