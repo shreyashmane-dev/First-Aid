@@ -42,10 +42,7 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 selection:text-white">
-      {/* Top Emergency Advisory Alert */}
-      <EmergencyBanner onFindHospitals={() => setActiveTab('hospitals')} />
-
-      {/* Main Top Navbar */}
+      {/* Vertical Left Navbar Sidebar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -54,8 +51,12 @@ const MainContent: React.FC = () => {
         onOpenPrivacyData={() => setIsPrivacyDataOpen(true)}
       />
 
-      {/* Main View Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      {/* Main View Area (Offset by left sidebar on desktop lg:pl-72) */}
+      <div className="flex-1 lg:pl-72 flex flex-col min-h-screen">
+        {/* Top Emergency Advisory Alert */}
+        <EmergencyBanner onFindHospitals={() => setActiveTab('hospitals')} />
+
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16">
         {activeTab === 'home' && (
           <PatientDashboard
             onNavigate={(tab) => setActiveTab(tab)}
@@ -204,6 +205,7 @@ const MainContent: React.FC = () => {
           onEndCall={() => setActiveVideoMeetingId(null)}
         />
       )}
+      </div>
     </div>
   );
 };

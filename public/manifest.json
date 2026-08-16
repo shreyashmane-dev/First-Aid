@@ -1,0 +1,19 @@
+{
+  "short_name": "FirstAidAI",
+  "name": "First Aid Hospital - AI Emergency & Hospital Discovery",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020617",
+  "theme_color": "#e11d48",
+  "display": "standalone",
+  "orientation": "portrait",
+  "description": "AI-powered emergency first-aid, hospital discovery with Leaflet maps, verified doctors, and telemedicine.",
+  "categories": ["medical", "health", "emergency"]
+}
