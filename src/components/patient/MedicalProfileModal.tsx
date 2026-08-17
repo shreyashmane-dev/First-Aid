@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import type { Language } from '../../services/translations';
 import type { BloodGroup } from '../../types';
-import { X, HeartPulse, ShieldCheck, Plus, Trash2, Save } from 'lucide-react';
+import { X, HeartPulse, ShieldCheck, Plus, Trash2, Save, Globe, Check } from 'lucide-react';
 
 interface MedicalProfileModalProps {
   isOpen: boolean;
@@ -14,7 +16,9 @@ const BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 
 export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen, onClose }) => {
   const { patientProfile, updatePatientProfile } = useAuth();
   const { medicalProfile, updateMedicalProfile } = useApp();
+  const { language, setLanguage, t } = useLanguage();
 
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(language);
   const [bloodGroup, setBloodGroup] = useState<BloodGroup>(medicalProfile.bloodGroup);
   const [allergies, setAllergies] = useState<string[]>(medicalProfile.allergies);
   const [newAllergy, setNewAllergy] = useState('');
@@ -28,6 +32,7 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
   const [emergencyName, setEmergencyName] = useState(patientProfile?.emergencyContact.name || '');
   const [emergencyPhone, setEmergencyPhone] = useState(patientProfile?.emergencyContact.phone || '');
   const [shareDoctor, setShareDoctor] = useState(patientProfile?.shareProfileWithDoctor ?? true);
+  const [savedNotice, setSavedNotice] = useState(false);
 
   if (!isOpen) return null;
 
@@ -65,6 +70,9 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
   };
 
   const handleSave = () => {
+    // Update active language
+    setLanguage(selectedLanguage);
+
     updateMedicalProfile({
       bloodGroup,
       allergies,
@@ -81,7 +89,11 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
       shareProfileWithDoctor: shareDoctor
     });
 
-    onClose();
+    setSavedNotice(true);
+    setTimeout(() => {
+      setSavedNotice(false);
+      onClose();
+    }, 400);
   };
 
   return (
@@ -94,8 +106,8 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
               <HeartPulse className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Patient Medical Profile</h2>
-              <p className="text-xs text-slate-400">Update blood group, allergies, conditions & emergency contacts</p>
+              <h2 className="text-xl font-bold text-white">{t('patientMedicalProfile')}</h2>
+              <p className="text-xs text-slate-400">{t('profileModalSubtitle')}</p>
             </div>
           </div>
           <button
@@ -108,10 +120,58 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
 
         {/* Form Content Body */}
         <div className="p-6 overflow-y-auto space-y-6 text-slate-300 text-sm">
+          {/* 🌐 Language Preference Toggle (1st is English, 2nd is Marathi) */}
+          <div className="bg-gradient-to-r from-slate-800/90 to-indigo-950/40 p-4 rounded-2xl border border-indigo-500/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                <Globe className="w-4 h-4 text-indigo-400" />
+                <span>{t('languagePreference')}</span>
+              </label>
+              <span className="text-[11px] font-medium text-indigo-300">
+                {selectedLanguage === 'en' ? 'English selected' : 'मराठी निवडली आहे'}
+              </span>
+            </div>
+
+            {/* Toggle Buttons: 1st English, 2nd Marathi */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedLanguage('en');
+                  setLanguage('en');
+                }}
+                className={`py-3 px-4 rounded-xl text-xs font-extrabold border transition-all flex items-center justify-center gap-2 ${
+                  selectedLanguage === 'en'
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/40 scale-[1.02]'
+                    : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                {selectedLanguage === 'en' && <Check className="w-4 h-4 text-white" />}
+                <span>1. English (EN)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedLanguage('mr');
+                  setLanguage('mr');
+                }}
+                className={`py-3 px-4 rounded-xl text-xs font-extrabold border transition-all flex items-center justify-center gap-2 ${
+                  selectedLanguage === 'mr'
+                    ? 'bg-rose-600 border-rose-500 text-white shadow-lg shadow-rose-600/40 scale-[1.02]'
+                    : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                {selectedLanguage === 'mr' && <Check className="w-4 h-4 text-white" />}
+                <span>2. मराठी - Marathi (MR)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Blood Group */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Blood Group (Critical)
+              {t('bloodGroup')}
             </label>
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
               {BLOOD_GROUPS.map((bg) => (
@@ -134,12 +194,12 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
           {/* Allergies */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Known Allergies (Drug / Food / Environmental)
+              {t('knownAllergies')}
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="e.g. Penicillin, Peanuts, Latex..."
+                placeholder={t('addAllergyPlaceholder')}
                 value={newAllergy}
                 onChange={(e) => setNewAllergy(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddAllergy())}
@@ -150,7 +210,7 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
                 onClick={handleAddAllergy}
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1"
               >
-                <Plus className="w-4 h-4" /> Add
+                <Plus className="w-4 h-4" /> {t('addBtn')}
               </button>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
@@ -171,12 +231,12 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
           {/* Chronic Conditions */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Medical Conditions & Illnesses
+              {t('medicalConditions')}
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="e.g. Mild Asthma, Hypertension..."
+                placeholder={t('addConditionPlaceholder')}
                 value={newCondition}
                 onChange={(e) => setNewCondition(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCondition())}
@@ -187,7 +247,7 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
                 onClick={handleAddCondition}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
               >
-                <Plus className="w-4 h-4" /> Add
+                <Plus className="w-4 h-4" /> {t('addBtn')}
               </button>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
@@ -208,12 +268,12 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
           {/* Current Medications */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Current Medications
+              {t('currentMedications')}
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="e.g. Albuterol Inhaler, Insulin..."
+                placeholder={t('addMedicationPlaceholder')}
                 value={newMedication}
                 onChange={(e) => setNewMedication(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMedication())}
@@ -224,7 +284,7 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
                 onClick={handleAddMedication}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
               >
-                <Plus className="w-4 h-4" /> Add
+                <Plus className="w-4 h-4" /> {t('addBtn')}
               </button>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
@@ -246,7 +306,7 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
-                Emergency Contact Name
+                {t('emergencyContactName')}
               </label>
               <input
                 type="text"
@@ -257,7 +317,7 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 mb-1">
-                Emergency Contact Phone
+                {t('emergencyContactPhone')}
               </label>
               <input
                 type="text"
@@ -270,16 +330,16 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
 
           {/* Privacy Toggle */}
           <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700/80 flex items-center justify-between">
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 pr-2">
               <div className="font-bold text-white text-xs flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>Doctor Access Authorization</span>
+                <span>{t('doctorAccessAuth')}</span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Allow booked doctors to view blood group, allergies, and emergency contact during consultations.
+                {t('doctorAccessDesc')}
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
               <input
                 type="checkbox"
                 checked={shareDoctor}
@@ -292,20 +352,25 @@ export const MedicalProfileModal: React.FC<MedicalProfileModalProps> = ({ isOpen
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900 flex items-center justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>Save Medical Profile</span>
-          </button>
+        <div className="p-4 border-t border-slate-800 bg-slate-900 flex items-center justify-between">
+          <div className="text-xs text-emerald-400 font-bold">
+            {savedNotice ? t('profileSavedSuccess') : ''}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all"
+            >
+              {t('cancelBtn')}
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              <span>{t('saveProfileBtn')}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

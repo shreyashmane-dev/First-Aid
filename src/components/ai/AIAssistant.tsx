@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { processAIChatMessage } from '../../services/aiOrchestrator';
 import type { AIChatMessage } from '../../types';
 import {
@@ -25,6 +26,7 @@ interface AIAssistantProps {
 export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onReadFirstAid }) => {
   const { chatMessages, addChatMessage, clearChatHistory, medicalProfile } = useApp();
   const { patientProfile } = useAuth();
+  const { language, t } = useLanguage();
 
   const [inputQuery, setInputQuery] = useState('');
   const [selectedModel, setSelectedModel] = useState<'Gemini' | 'OpenAI'>('Gemini');
@@ -67,7 +69,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
       const aiResult = await processAIChatMessage(
         textToSend,
         selectedModel,
-        patientProfile?.shareProfileWithDoctor ? medicalProfile : undefined
+        patientProfile?.shareProfileWithDoctor ? medicalProfile : undefined,
+        language
       );
 
       const aiMessage: AIChatMessage = {
@@ -89,11 +92,13 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
       addChatMessage({
         id: `msg_err_${Date.now()}`,
         sender: 'ai',
-        message: 'I am experiencing connectivity issues. For urgent health concerns, please call emergency 108 immediately.',
+        message: language === 'mr'
+          ? 'इंटरनेट कनेक्शनमध्ये समस्या आली आहे. तात्काळ वैद्यकीय मदतीसाठी १०८ वर संपर्क साधा.'
+          : 'I am experiencing connectivity issues. For urgent health concerns, please call emergency 108 immediately.',
         severity: 'HIGH',
         emergency: true,
         suggestedActions: [
-          { label: '🚨 Call Emergency (108)', action: 'call_emergency', target: '108' }
+          { label: language === 'mr' ? '🚨 रुग्णवाहिका (108)' : '🚨 Call Emergency (108)', action: 'call_emergency', target: '108' }
         ],
         timestamp: new Date().toISOString()
       });
@@ -125,12 +130,12 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-white">AI First-Aid Symptom Companion</h1>
+              <h1 className="text-xl font-bold text-white">{t('aiTitle')}</h1>
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold font-mono">
                 {selectedModel} Powered
               </span>
             </div>
-            <p className="text-xs text-slate-400">Safety guidance engine with emergency escalation triggers</p>
+            <p className="text-xs text-slate-400">{t('aiSubtitle')}</p>
           </div>
         </div>
 
@@ -158,7 +163,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
           <button
             onClick={clearChatHistory}
             className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-950/60 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-colors"
-            title="Clear Chat History"
+            title={t('clearChat')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -173,7 +178,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
           <div className="bg-amber-950/20 border border-amber-500/30 rounded-2xl p-4 flex items-start gap-3 text-xs text-amber-200">
             <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <strong className="font-bold text-amber-300">Safety Notice:</strong> First Aid Hospital AI does not diagnose conditions or prescribe medicine. For severe chest pain, snake bites, or heavy bleeding, use the emergency buttons below.
+              <strong className="font-bold text-amber-300">
+                {language === 'mr' ? 'सुरक्षा सूचना:' : 'Safety Notice:'}
+              </strong>{' '}
+              {t('aiDisclaimer')}
             </div>
           </div>
 
@@ -209,7 +217,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
                           }`}
                         >
                           <ShieldAlert className="w-3.5 h-3.5" />
-                          Emergency Severity: {msg.severity}
+                          {language === 'mr' ? `आणीबाणी पातळी: ${msg.severity}` : `Emergency Severity: ${msg.severity}`}
                         </span>
                       </div>
                     )}
@@ -220,7 +228,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
                     {msg.steps && msg.steps.length > 0 && (
                       <div className="mt-4 pt-3 border-t border-slate-700/80 space-y-2">
                         <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
-                          Immediate Action Steps:
+                          {language === 'mr' ? 'तात्काळ करावयाच्या कृती (Immediate Steps):' : 'Immediate Action Steps:'}
                         </span>
                         <ul className="space-y-1.5 text-xs text-slate-200">
                           {msg.steps.map((step, idx) => (
@@ -237,7 +245,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
                     {msg.avoid && msg.avoid.length > 0 && (
                       <div className="mt-3 pt-2 border-t border-slate-700/80 space-y-1">
                         <span className="text-xs font-bold text-rose-400 uppercase tracking-wider block">
-                          Do NOT Do:
+                          {language === 'mr' ? 'काय करू नये (Do NOT Do):' : 'Do NOT Do:'}
                         </span>
                         <ul className="space-y-1 text-xs text-rose-200">
                           {msg.avoid.map((item, idx) => (
@@ -284,7 +292,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
               <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-400 animate-spin">
                 <RefreshCw className="w-4 h-4" />
               </div>
-              <span>AI Safety Orchestrator analyzing situation...</span>
+              <span>{language === 'mr' ? 'एआय परिस्थितीचे विश्लेषण करत आहे...' : 'AI Safety Orchestrator analyzing situation...'}</span>
             </div>
           )}
 
@@ -315,24 +323,26 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
 
           {/* Quick Trigger Chips */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 text-xs">
-            <span className="text-slate-500 text-[11px] font-bold shrink-0">Quick Prompts:</span>
+            <span className="text-slate-500 text-[11px] font-bold shrink-0">
+              {language === 'mr' ? 'त्वरित प्रश्न:' : 'Quick Prompts:'}
+            </span>
             <button
-              onClick={() => handleSend("What is the immediate CPR protocol for unconscious person?")}
+              onClick={() => handleSend(language === 'mr' ? 'बेशुद्ध व्यक्तीवर सीपीआर कसा करावा?' : 'What is the immediate CPR protocol for unconscious person?')}
               className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg whitespace-nowrap transition-colors border border-slate-700"
             >
-              ❤️ CPR Steps
+              ❤️ {language === 'mr' ? 'सीपीआर पायऱ्या' : 'CPR Steps'}
             </button>
             <button
-              onClick={() => handleSend("I was bitten by a snake on my leg! What should I do?")}
+              onClick={() => handleSend(language === 'mr' ? 'पायाला विषारी साप चावला आहे, तात्काळ काय करावे?' : 'I was bitten by a snake on my leg! What should I do?')}
               className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-lg whitespace-nowrap transition-colors border border-slate-700"
             >
-              🐍 Snake Bite Emergency
+              🐍 {language === 'mr' ? 'साप चावल्यास' : 'Snake Bite'}
             </button>
             <button
-              onClick={() => handleSend("My relative has crushing chest pain and sweating.")}
+              onClick={() => handleSend(language === 'mr' ? 'छातीत तीव्र वेदना आणि घाम येत आहे.' : 'My relative has crushing chest pain and sweating.')}
               className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-rose-300 rounded-lg whitespace-nowrap transition-colors border border-slate-700"
             >
-              🫀 Chest Pain Triage
+              🫀 {language === 'mr' ? 'छातीत वेदना' : 'Chest Pain'}
             </button>
           </div>
 
@@ -344,7 +354,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
 
             <input
               type="text"
-              placeholder="Describe what happened or ask first-aid advice..."
+              placeholder={t('aiPlaceholder')}
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -357,7 +367,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
               className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-1.5 disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Send</span>
+              <span className="hidden sm:inline">{t('sendBtn')}</span>
             </button>
           </div>
         </div>

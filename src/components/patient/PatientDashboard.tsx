@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { emergencyHotlineService } from '../../services/emergencyHotlineService';
 import {
   HeartPulse,
@@ -36,6 +37,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const { medicalProfile, appointments, firstAidArticles } = useApp();
+  const { t, language } = useLanguage();
 
   const hotlines = emergencyHotlineService.getHotlines();
 
@@ -55,20 +57,39 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           {/* Top Pill */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-rose-500/20 via-amber-500/20 to-emerald-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold backdrop-blur-md">
             <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
-            <span>AI-Powered Emergency Care & Hospital Discovery Network</span>
+            <span>
+              {language === 'mr'
+                ? 'एआय-आधारित आपत्कालीन वैद्यकीय सेवा आणि रुग्णालय नेटवर्क'
+                : 'AI-Powered Emergency Care & Hospital Discovery Network'}
+            </span>
           </div>
 
           {/* Headline */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
-            Immediate Medical Guidance <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-red-400 via-rose-300 to-emerald-400 bg-clip-text text-transparent">
-              When Seconds Count.
-            </span>
+            {language === 'mr' ? (
+              <>
+                तात्काळ वैद्यकीय मार्गदर्शन <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-red-400 via-rose-300 to-emerald-400 bg-clip-text text-transparent">
+                  प्रत्येक सेकंद महत्त्वाचा असतो.
+                </span>
+              </>
+            ) : (
+              <>
+                Immediate Medical Guidance <br className="hidden sm:inline" />
+                <span className="bg-gradient-to-r from-red-400 via-rose-300 to-emerald-400 bg-clip-text text-transparent">
+                  When Seconds Count.
+                </span>
+              </>
+            )}
           </h1>
 
           {/* Subtitle */}
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl font-normal">
-            Welcome, <strong className="text-white font-bold">{currentUser?.displayName || 'Sarah'}</strong>. First Aid Hospital connects you to instantaneous dual AI triage (Gemini + OpenAI), interactive Leaflet maps with 1-click radius filters, verified doctor directories, and secure WebRTC video consultation suites.
+            {t('welcomeBack')}{' '}
+            <strong className="text-white font-bold">{currentUser?.displayName || 'User'}</strong>.{' '}
+            {language === 'mr'
+              ? 'फर्स्ट एड हॉस्पिटल आपल्याला दुहेरी एआय आणीबाणी तपासणी (Gemini + OpenAI), परस्पर नकाशावर जवळपासची रुग्णालये, तज्ज्ञ डॉक्टर आणि सुरक्षित व्हिडिओ कन्सल्टेशन प्रदान करते.'
+              : 'First Aid Hospital connects you to instantaneous dual AI triage (Gemini + OpenAI), interactive Leaflet maps with 1-click radius filters, verified doctor directories, and secure WebRTC video consultation suites.'}
           </p>
 
           {/* Call-to-Action Buttons */}
@@ -78,7 +99,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-black text-sm rounded-2xl shadow-2xl shadow-rose-600/40 hover:scale-105 transition-all"
             >
               <Bot className="w-5 h-5 animate-pulse" />
-              <span>Launch AI Symptom Triage</span>
+              <span>{t('askAiAssistant')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
@@ -87,7 +108,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               className="flex items-center gap-3 px-6 py-4 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-white font-bold text-sm rounded-2xl shadow-xl hover:scale-105 transition-all"
             >
               <MapPin className="w-5 h-5 text-sky-400" />
-              <span>Locate 24/7 ER Hospitals</span>
+              <span>{t('findHospitalNearby')}</span>
             </button>
 
             <a
@@ -95,7 +116,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               className="flex items-center gap-2 px-5 py-4 bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-bold text-xs rounded-2xl transition-all"
             >
               <PhoneCall className="w-4 h-4 text-red-400 animate-bounce" />
-              <span>Call SOS ({hotlines.primaryEmergencyNumber} / {hotlines.ambulanceNumber})</span>
+              <span>{t('sosEmergency')} ({hotlines.primaryEmergencyNumber} / {hotlines.ambulanceNumber})</span>
             </a>
           </div>
         </div>
@@ -109,7 +130,9 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           </div>
           <div>
             <div className="text-2xl font-black text-white font-mono">100+</div>
-            <div className="text-xs text-slate-400">Verified ER Hospitals</div>
+            <div className="text-xs text-slate-400">
+              {language === 'mr' ? 'प्रमाणित आपत्कालीन रुग्णालये' : 'Verified ER Hospitals'}
+            </div>
           </div>
         </div>
 
@@ -119,7 +142,9 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           </div>
           <div>
             <div className="text-2xl font-black text-white font-mono">50+</div>
-            <div className="text-xs text-slate-400">Specialist Doctors</div>
+            <div className="text-xs text-slate-400">
+              {language === 'mr' ? 'तज्ज्ञ डॉक्टर' : 'Specialist Doctors'}
+            </div>
           </div>
         </div>
 
@@ -129,7 +154,9 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           </div>
           <div>
             <div className="text-2xl font-black text-white font-mono">&lt; 2 min</div>
-            <div className="text-xs text-slate-400">AI Triage Speed</div>
+            <div className="text-xs text-slate-400">
+              {language === 'mr' ? 'एआय तपासणी गती' : 'AI Triage Speed'}
+            </div>
           </div>
         </div>
 
@@ -139,7 +166,9 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           </div>
           <div>
             <div className="text-2xl font-black text-white font-mono">24 / 7</div>
-            <div className="text-xs text-slate-400">Emergency Monitoring</div>
+            <div className="text-xs text-slate-400">
+              {language === 'mr' ? 'आपत्कालीन मॉनिटरिंग' : 'Emergency Monitoring'}
+            </div>
           </div>
         </div>
       </div>
@@ -149,18 +178,27 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span>Instant AI Emergency Safety Prompts</span>
+            <span>
+              {language === 'mr' ? 'त्वरित एआय आणीबाणी सूचना व प्रश्न' : 'Instant AI Emergency Safety Prompts'}
+            </span>
           </h3>
-          <span className="text-xs text-slate-400">Click any prompt to ask AI assistant</span>
+          <span className="text-xs text-slate-400">
+            {language === 'mr' ? 'एआय सहाय्यकाला विचारण्यासाठी क्लिक करा' : 'Click any prompt to ask AI assistant'}
+          </span>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {[
+          {(language === 'mr' ? [
+            '🐍 विषारी साप चावल्यावर तात्काळ प्रथमोपचार काय करावेत?',
+            '❤️ बेशुद्ध व्यक्तीवर सीपीआर (CPR) कसा करावा?',
+            '🔥 हाताला भाजल्यावर काय उपचार करावेत?',
+            '🌬️ दम्याचा झटका आल्यावर काय प्रथमोपचार करावेत?'
+          ] : [
             '🐍 What is the immediate first-aid for a venomous snake bite?',
             '❤️ How do I perform CPR compressions on an unconscious person?',
             '🔥 How to treat a 2nd degree burn on hands?',
             '🌬️ What are the steps for acute asthma attack breathlessness?'
-          ].map((prompt, idx) => (
+          ]).map((prompt, idx) => (
             <button
               key={idx}
               onClick={() => onNavigate('ai_chat')}
@@ -179,13 +217,13 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-rose-400" />
-              <h2 className="text-lg font-bold text-white">Upcoming Doctor Consultations</h2>
+              <h2 className="text-lg font-bold text-white">{t('myActiveAppointments')}</h2>
             </div>
             <button
               onClick={() => onNavigate('appointments')}
               className="text-xs text-rose-400 hover:text-rose-300 font-medium flex items-center gap-1"
             >
-              View All <ChevronRight className="w-4 h-4" />
+              {language === 'mr' ? 'सर्व पहा' : 'View All'} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -206,7 +244,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <div className="flex flex-col items-start sm:items-end">
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    {activeUpcomingAppointment.status.toUpperCase()}
+                    {activeUpcomingAppointment.status === 'confirmed' ? t('confirmed') : activeUpcomingAppointment.status.toUpperCase()}
                   </span>
                   <p className="text-xs text-slate-300 font-medium mt-1">
                     📅 {activeUpcomingAppointment.appointmentDate} at {activeUpcomingAppointment.startTime}
@@ -216,7 +254,8 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 
               <div className="pt-3 border-t border-slate-700/60 flex items-center justify-between">
                 <div className="text-xs text-slate-400">
-                  Consultation Mode: <strong className="text-white capitalize">{activeUpcomingAppointment.type.replace('_', ' ')}</strong>
+                  {language === 'mr' ? 'सल्ला प्रकार:' : 'Consultation Mode:'}{' '}
+                  <strong className="text-white capitalize">{activeUpcomingAppointment.type.replace('_', ' ')}</strong>
                 </div>
 
                 {activeUpcomingAppointment.type === 'video' && activeUpcomingAppointment.meetingId && (
@@ -225,19 +264,19 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all"
                   >
                     <Video className="w-4 h-4 animate-pulse" />
-                    <span>Join Video Call Suite</span>
+                    <span>{t('joinVideoCall')}</span>
                   </button>
                 )}
               </div>
             </div>
           ) : (
             <div className="bg-slate-800/40 rounded-2xl p-6 text-center border border-dashed border-slate-700 space-y-3">
-              <p className="text-slate-400 text-xs">No active appointments scheduled today.</p>
+              <p className="text-slate-400 text-xs">{t('noActiveAppointments')}</p>
               <button
                 onClick={() => onNavigate('doctors')}
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition-all shadow-md"
               >
-                Schedule Specialist Doctor
+                {t('bookSpecialist')}
               </button>
             </div>
           )}
@@ -248,26 +287,26 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <HeartPulse className="w-5 h-5 text-rose-500" />
-              <h2 className="text-lg font-bold text-white">Medical Background</h2>
+              <h2 className="text-lg font-bold text-white">{t('medicalProfileSummary')}</h2>
             </div>
             <button
               onClick={onOpenMedicalProfile}
               className="text-xs text-rose-400 hover:text-rose-300 font-semibold"
             >
-              Update
+              {t('viewEditProfile')}
             </button>
           </div>
 
           <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700 space-y-3 text-xs">
             <div className="flex items-center justify-between pb-2 border-b border-slate-700">
-              <span className="text-slate-400">Blood Group</span>
+              <span className="text-slate-400">{t('bloodGroup')}</span>
               <span className="px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/40 rounded-lg font-extrabold text-sm">
                 {medicalProfile.bloodGroup}
               </span>
             </div>
 
             <div>
-              <span className="text-slate-400 block mb-1">Known Allergies:</span>
+              <span className="text-slate-400 block mb-1">{t('knownAllergies')}:</span>
               <div className="flex flex-wrap gap-1.5">
                 {medicalProfile.allergies.length > 0 ? (
                   medicalProfile.allergies.map((allergy, i) => (
@@ -276,24 +315,24 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                     </span>
                   ))
                 ) : (
-                  <span className="text-slate-500 italic">None listed</span>
+                  <span className="text-slate-500 italic">{language === 'mr' ? 'काहीही नाही' : 'None listed'}</span>
                 )}
               </div>
             </div>
 
             <div>
-              <span className="text-slate-400 block mb-1">Emergency Contact:</span>
+              <span className="text-slate-400 block mb-1">{t('emergencyContactName')}:</span>
               <p className="text-white font-medium">
-                {medicalProfile.importantNotes ? 'David Jenkins (Spouse)' : 'David Jenkins'}
+                {medicalProfile.importantNotes ? 'Primary Contact' : 'Emergency Contact'}
               </p>
-              <p className="text-emerald-400 font-mono text-[11px]">+1 (555) 876-5432</p>
+              <p className="text-emerald-400 font-mono text-[11px]">+91 98765 43210</p>
             </div>
 
             <div className="pt-2 border-t border-slate-700 flex items-center justify-between text-[11px] text-slate-400">
               <span className="flex items-center gap-1 text-emerald-400">
                 <Lock className="w-3.5 h-3.5" /> HIPAA Encrypted
               </span>
-              <span>Controlled Access</span>
+              <span>{language === 'mr' ? 'सुरक्षित प्रवेश' : 'Controlled Access'}</span>
             </div>
           </div>
         </div>
@@ -304,13 +343,13 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-amber-400" />
-            <h2 className="text-xl font-bold text-white">Verified First-Aid Procedures</h2>
+            <h2 className="text-xl font-bold text-white">{t('verifiedGuides')}</h2>
           </div>
           <button
             onClick={() => onNavigate('first_aid')}
             className="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
           >
-            Browse All {firstAidArticles.length} Guides <ChevronRight className="w-4 h-4" />
+            {language === 'mr' ? `सर्व ${firstAidArticles.length} मार्गदर्शिका पहा` : `Browse All ${firstAidArticles.length} Guides`} <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
@@ -350,9 +389,11 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
 
               <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
                 <span className="text-[11px] text-emerald-400 flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5" /> Reviewed
+                  <UserCheck className="w-3.5 h-3.5" /> {language === 'mr' ? 'तपासलेले' : 'Reviewed'}
                 </span>
-                <span className="group-hover:translate-x-1 transition-transform text-rose-400 font-bold">Read &rarr;</span>
+                <span className="group-hover:translate-x-1 transition-transform text-rose-400 font-bold">
+                  {language === 'mr' ? 'वाचा' : 'Read'} &rarr;
+                </span>
               </div>
             </div>
           ))}
