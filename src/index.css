@@ -12,51 +12,111 @@
   }
 
   .dark {
-    --bg-main: #090d16;
-    --bg-card: #0f172a;
+    --bg-main: #020617;
+    --bg-card: #0b132b;
     --border-color: #1e293b;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
   }
 
   body {
-    @apply bg-slate-950 text-slate-100 font-sans antialiased min-h-screen selection:bg-rose-500 selection:text-white transition-colors duration-200;
+    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased min-h-screen selection:bg-rose-500 selection:text-white transition-colors duration-300;
   }
 }
 
-/* Custom Scrollbar */
+/* 🌟 Premium Glassmorphism & UI Utilities */
+.glass-panel {
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-lg dark:shadow-2xl;
+}
+
+.glass-card {
+  @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg border border-slate-200/70 dark:border-slate-800/70 shadow-md dark:shadow-xl transition-all duration-300;
+}
+
+.glass-card-hover {
+  @apply hover:bg-white/90 dark:hover:bg-slate-800/90 hover:border-rose-500/40 dark:hover:border-rose-500/50 hover:shadow-2xl hover:shadow-rose-500/10 hover:-translate-y-0.5;
+}
+
+.glass-input {
+  @apply bg-slate-100/80 dark:bg-slate-800/80 border border-slate-300/80 dark:border-slate-700/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 backdrop-blur-sm transition-all;
+}
+
+/* Glowing Aura Effects */
+.glow-rose {
+  box-shadow: 0 0 35px -5px rgba(244, 63, 94, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.35);
+}
+
+.glow-indigo {
+  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.35);
+}
+
+.glow-sky {
+  box-shadow: 0 0 35px -5px rgba(14, 165, 233, 0.35);
+}
+
+/* Gradient Text */
+.gradient-text-rose {
+  @apply bg-gradient-to-r from-red-500 via-rose-400 to-pink-500 bg-clip-text text-transparent;
+}
+
+.gradient-text-emerald {
+  @apply bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent;
+}
+
+.gradient-text-brand {
+  @apply bg-gradient-to-r from-red-500 via-rose-400 to-emerald-400 bg-clip-text text-transparent;
+}
+
+/* Medical Grid Mesh Pattern */
+.medical-grid-bg {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+}
+
+.dark .medical-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+/* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 9999px;
+  @apply bg-slate-300 dark:bg-slate-800 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  @apply bg-slate-400 dark:bg-slate-700;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Glowing Aura FX */
-.glow-red {
-  box-shadow: 0 0 25px rgba(225, 29, 72, 0.25);
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
 
-.glow-emerald {
-  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
 }

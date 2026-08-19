@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
-import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/common/Navbar';
 import { EmergencyBanner } from './components/common/EmergencyBanner';
 import { Footer } from './components/common/Footer';
@@ -49,7 +49,6 @@ const MainContent: React.FC = () => {
     }
   };
 
-  // Sync hash or storage changes
   useEffect(() => {
     try {
       localStorage.setItem('first_aid_active_tab', activeTab);
@@ -72,11 +71,11 @@ const MainContent: React.FC = () => {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-slate-800 dark:text-white space-y-4">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-xl shadow-red-500/20 animate-pulse">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-slate-900 dark:text-white space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-red-600 via-rose-500 to-emerald-500 flex items-center justify-center shadow-2xl shadow-rose-600/40 animate-bounce">
           <Loader2 className="w-8 h-8 text-white animate-spin" />
         </div>
-        <div className="text-sm font-bold text-slate-600 dark:text-slate-300 tracking-wider">
+        <div className="text-sm font-bold text-slate-600 dark:text-slate-300 tracking-wider animate-pulse">
           Loading First Aid Hospital...
         </div>
       </div>
@@ -84,7 +83,11 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-rose-500 selection:text-white transition-colors duration-300 relative overflow-x-hidden">
+      {/* Ambient background glows */}
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-rose-500/5 dark:bg-rose-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-emerald-500/5 dark:bg-emerald-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Vertical Left Navbar Sidebar */}
       <Navbar
         activeTab={activeTab}
@@ -149,52 +152,48 @@ const MainContent: React.FC = () => {
           )}
 
           {activeTab === 'appointments' && (
-            <div className="space-y-6 pb-12">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-xl">
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50">
-                    <Calendar className="w-5 h-5" />
-                  </div>
+            <div className="space-y-6 pb-12 animate-fade-in">
+              <div className="glass-panel rounded-3xl p-6 sm:p-8">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Calendar className="w-6 h-6 text-rose-500" />
                   <span>{t('appointmentHistoryTitle')}</span>
                 </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t('appointmentHistoryDesc')}
                 </p>
               </div>
 
               {appointments.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center text-slate-500 dark:text-slate-400 text-sm shadow-sm">
-                  <Calendar className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-                  <p className="font-semibold">{t('noActiveAppointments')}</p>
-                  <p className="text-xs mt-1 text-slate-400">Book an in-person or video consultation with verified medical specialists.</p>
+                <div className="glass-card rounded-3xl p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                  {t('noActiveAppointments')}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {appointments.map((apt) => (
                     <div
                       key={apt.appointmentId}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700"
+                      className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-500 dark:text-indigo-400 font-bold shadow-inner">
                           <Stethoscope className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="font-bold text-slate-900 dark:text-white text-base">{apt.doctorName}</h3>
                           <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{apt.doctorSpecialization}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                             📅 {apt.appointmentDate} at {apt.startTime} • {apt.hospitalName}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                           apt.status === 'confirmed'
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                             : apt.status === 'completed'
-                            ? 'bg-sky-50 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30'
-                            : 'bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
+                            ? 'bg-sky-500/15 text-sky-600 dark:text-sky-300 border border-sky-500/30'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30'
                         }`}>
                           {apt.status === 'confirmed' ? t('confirmed') : apt.status === 'completed' ? t('completed') : apt.status}
                         </span>
@@ -202,7 +201,7 @@ const MainContent: React.FC = () => {
                         {apt.type === 'video' && apt.meetingId && (
                           <button
                             onClick={() => setActiveVideoMeetingId(apt.meetingId!)}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-2xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-2xl shadow-lg shadow-emerald-600/30 transition-all animate-pulse"
                           >
                             <Video className="w-4 h-4" />
                             <span>{t('joinVideoCall')}</span>
@@ -228,7 +227,7 @@ const MainContent: React.FC = () => {
         </main>
 
         {/* Global Footer */}
-        <Footer onNavigate={setActiveTab} />
+        <Footer />
 
         {/* Modals & Telemedicine Room */}
         <MedicalProfileModal

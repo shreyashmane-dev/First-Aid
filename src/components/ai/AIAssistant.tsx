@@ -121,48 +121,48 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12">
+    <div className="max-w-5xl mx-auto space-y-6 pb-12 animate-fade-in">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="glass-panel rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center text-white shadow-md">
-            <Bot className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-emerald-600/30">
+            <Bot className="w-7 h-7" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-slate-900 dark:text-white">{t('aiTitle')}</h1>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 text-[10px] font-bold font-mono">
-                {selectedModel} Engine
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">{t('aiTitle')}</h1>
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-bold font-mono">
+                {selectedModel} Powered
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{t('aiSubtitle')}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('aiSubtitle')}</p>
           </div>
         </div>
 
         {/* Model Switcher & Clear Controls */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs shadow-sm">
             <button
               onClick={() => setSelectedModel('Gemini')}
-              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                selectedModel === 'Gemini' ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                selectedModel === 'Gemini' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Gemini
+              Gemini 1.5
             </button>
             <button
               onClick={() => setSelectedModel('OpenAI')}
-              className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                selectedModel === 'OpenAI' ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              className={`px-3 py-1 rounded-lg font-bold transition-all ${
+                selectedModel === 'OpenAI' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              GPT-4o
+              OpenAI gpt-4o
             </button>
           </div>
 
           <button
             onClick={clearChatHistory}
-            className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/60 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors shadow-sm cursor-pointer"
             title={t('clearChat')}
           >
             <Trash2 className="w-4 h-4" />
@@ -171,14 +171,14 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
       </div>
 
       {/* Chat Area Container */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl h-[560px] flex flex-col shadow-sm dark:shadow-2xl overflow-hidden">
+      <div className="glass-panel rounded-3xl h-[560px] flex flex-col shadow-2xl overflow-hidden">
         {/* Messages Body */}
         <div className="flex-1 p-6 overflow-y-auto space-y-6">
           {/* Medical Safety Disclaimer */}
-          <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-4 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 rounded-2xl p-4 flex items-start gap-3 text-xs text-amber-800 dark:text-amber-200 shadow-sm">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <strong className="font-bold text-amber-800 dark:text-amber-300">
+              <strong className="font-bold text-amber-900 dark:text-amber-300">
                 {language === 'mr' ? 'सुरक्षा सूचना:' : 'Safety Notice:'}
               </strong>{' '}
               {t('aiDisclaimer')}
@@ -193,27 +193,27 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
                 className={`flex gap-3 ${isAI ? 'justify-start' : 'justify-end'}`}
               >
                 {isAI && (
-                  <div className="w-8 h-8 rounded-xl bg-emerald-600 dark:bg-emerald-500 flex items-center justify-center text-white shrink-0 shadow-sm">
-                    <Bot className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                    <Bot className="w-5 h-5" />
                   </div>
                 )}
 
-                <div className={`max-w-2xl space-y-2.5 ${isAI ? 'w-full' : ''}`}>
+                <div className={`max-w-2xl space-y-3 ${isAI ? 'w-full' : ''}`}>
                   <div
-                    className={`p-4 sm:p-5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                    className={`p-5 rounded-3xl text-sm leading-relaxed ${
                       isAI
-                        ? 'bg-slate-50 dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm'
-                        : 'bg-rose-600 text-white shadow-sm rounded-br-none'
+                        ? 'glass-card text-slate-800 dark:text-slate-100 shadow-xl'
+                        : 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-lg shadow-rose-600/30 rounded-br-none'
                     }`}
                   >
                     {/* Severity Badge */}
                     {isAI && msg.severity && msg.severity !== 'LOW' && (
-                      <div className="mb-2.5">
+                      <div className="mb-3">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
                             msg.severity === 'CRITICAL'
-                              ? 'bg-red-100 dark:bg-red-600/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-500/50'
-                              : 'bg-amber-100 dark:bg-amber-600/30 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/50'
+                              ? 'bg-red-500/20 text-red-600 dark:text-red-300 border border-red-500/50 animate-pulse'
+                              : 'bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/50'
                           }`}
                         >
                           <ShieldAlert className="w-3.5 h-3.5" />
@@ -226,14 +226,14 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
 
                     {/* Step-by-step instructions if available */}
                     {msg.steps && msg.steps.length > 0 && (
-                      <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-700/80 space-y-2">
-                        <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                          {language === 'mr' ? 'तात्काळ करावयाच्या कृती:' : 'Immediate Action Steps:'}
+                      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700/80 space-y-2">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+                          {language === 'mr' ? 'तात्काळ करावयाच्या कृती (Immediate Steps):' : 'Immediate Action Steps:'}
                         </span>
                         <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-200">
                           {msg.steps.map((step, idx) => (
                             <li key={idx} className="flex items-start gap-2">
-                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">•</span>
+                              <span className="text-emerald-500 font-bold">•</span>
                               <span>{step}</span>
                             </li>
                           ))}
@@ -243,9 +243,9 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
 
                     {/* Avoid list */}
                     {msg.avoid && msg.avoid.length > 0 && (
-                      <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-700/80 space-y-1">
-                        <span className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
-                          {language === 'mr' ? 'काय करू नये:' : 'Do NOT Do:'}
+                      <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700/80 space-y-1">
+                        <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
+                          {language === 'mr' ? 'काय करू नये (Do NOT Do):' : 'Do NOT Do:'}
                         </span>
                         <ul className="space-y-1 text-xs text-rose-700 dark:text-rose-200">
                           {msg.avoid.map((item, idx) => (
@@ -266,12 +266,12 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
                         <button
                           key={idx}
                           onClick={() => handleActionClick(action)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer ${
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${
                             action.action === 'call_emergency'
-                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/40 animate-bounce'
                               : action.action === 'find_hospital'
-                              ? 'bg-sky-600 hover:bg-sky-700 text-white'
-                              : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-400 border border-slate-200 dark:border-slate-700'
+                              ? 'bg-sky-600 hover:bg-sky-500 text-white'
+                              : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400'
                           }`}
                         >
                           {action.action === 'call_emergency' && <PhoneCall className="w-3.5 h-3.5" />}
@@ -289,10 +289,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
 
           {isProcessing && (
             <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-xs italic">
-              <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 animate-spin">
-                <RefreshCw className="w-3.5 h-3.5" />
+              <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-emerald-500 animate-spin">
+                <RefreshCw className="w-4 h-4" />
               </div>
-              <span>{language === 'mr' ? 'एआय परिस्थितीचे विश्लेषण करत आहे...' : 'AI Clinical Orchestrator analyzing symptoms...'}</span>
+              <span>{language === 'mr' ? 'एआय परिस्थितीचे विश्लेषण करत आहे...' : 'AI Safety Orchestrator analyzing situation...'}</span>
             </div>
           )}
 
@@ -300,14 +300,14 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-3">
+        <div className="p-4 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 space-y-3">
           {/* Image Attachment Preview */}
           {attachedImagePreview && (
             <div className="relative inline-block">
               <img
                 src={attachedImagePreview}
                 alt="Attachment"
-                className="w-16 h-16 object-cover rounded-xl border border-slate-300 dark:border-slate-700"
+                className="w-16 h-16 object-cover rounded-xl border border-slate-300 dark:border-slate-700 shadow-sm"
               />
               <button
                 onClick={() => {
@@ -323,31 +323,31 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
 
           {/* Quick Trigger Chips */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 text-xs">
-            <span className="text-slate-400 dark:text-slate-500 text-[11px] font-bold shrink-0">
+            <span className="text-slate-500 dark:text-slate-400 text-[11px] font-bold shrink-0">
               {language === 'mr' ? 'त्वरित प्रश्न:' : 'Quick Prompts:'}
             </span>
             <button
               onClick={() => handleSend(language === 'mr' ? 'बेशुद्ध व्यक्तीवर सीपीआर कसा करावा?' : 'What is the immediate CPR protocol for unconscious person?')}
-              className="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer"
             >
               ❤️ {language === 'mr' ? 'सीपीआर पायऱ्या' : 'CPR Steps'}
             </button>
             <button
               onClick={() => handleSend(language === 'mr' ? 'पायाला विषारी साप चावला आहे, तात्काळ काय करावे?' : 'I was bitten by a snake on my leg! What should I do?')}
-              className="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 rounded-lg whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 rounded-lg whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer"
             >
               🐍 {language === 'mr' ? 'साप चावल्यास' : 'Snake Bite'}
             </button>
             <button
               onClick={() => handleSend(language === 'mr' ? 'छातीत तीव्र वेदना आणि घाम येत आहे.' : 'My relative has crushing chest pain and sweating.')}
-              className="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-rose-700 dark:text-rose-300 rounded-lg whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
+              className="px-3 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-rose-700 dark:text-rose-300 rounded-lg whitespace-nowrap transition-colors border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer"
             >
               🫀 {language === 'mr' ? 'छातीत वेदना' : 'Chest Pain'}
             </button>
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors">
+            <label className="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-2xl cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors shadow-sm">
               <ImageIcon className="w-4 h-4" />
               <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
             </label>
@@ -358,13 +358,13 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onFindHospitals, onRea
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-xs placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+              className="flex-1 glass-input rounded-2xl px-4 py-3 text-xs"
             />
 
             <button
               onClick={() => handleSend()}
               disabled={isProcessing}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">{t('sendBtn')}</span>
