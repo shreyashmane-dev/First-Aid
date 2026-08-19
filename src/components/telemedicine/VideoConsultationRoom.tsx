@@ -56,7 +56,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       {/* Top Header */}
       <div className="h-16 border-b border-slate-800 bg-slate-900/90 px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold animate-pulse">
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold">
             <Video className="w-5 h-5" />
           </div>
           <div>
@@ -75,7 +75,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
         <div className="flex items-center gap-3">
           <button
             onClick={handleEndCallInternal}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-red-600/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
           >
             <PhoneOff className="w-4 h-4" />
             <span>End Consultation</span>
@@ -87,7 +87,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         {/* Left 8 Cols: Video Viewport */}
         <div className="lg:col-span-8 bg-slate-900 p-6 flex flex-col justify-between relative border-r border-slate-800">
-          {/* Main Doctor Remote Video Stream (Simulated Live) */}
+          {/* Main Doctor Remote Video Stream */}
           <div className="relative flex-1 rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex items-center justify-center">
             {isVideoOn ? (
               <img
@@ -135,7 +135,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
           <div className="mt-4 flex items-center justify-center gap-4">
             <button
               onClick={() => setIsMicOn(!isMicOn)}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${
                 isMicOn
                   ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                   : 'bg-red-600 text-white shadow-lg shadow-red-600/30'
@@ -147,7 +147,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
 
             <button
               onClick={() => setIsVideoOn(!isVideoOn)}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${
                 isVideoOn
                   ? 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                   : 'bg-red-600 text-white shadow-lg shadow-red-600/30'
@@ -159,7 +159,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
 
             <button
               onClick={handleEndCallInternal}
-              className="w-14 h-12 rounded-2xl bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-xl shadow-red-600/40"
+              className="w-14 h-12 rounded-2xl bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg cursor-pointer"
               title="Leave Room"
             >
               <PhoneOff className="w-6 h-6" />
@@ -173,7 +173,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
           <div className="flex items-center border-b border-slate-800 bg-slate-950 p-2 gap-1 text-xs">
             <button
               onClick={() => setActiveTab('chat')}
-              className={`flex-1 py-2 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                 activeTab === 'chat' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -181,7 +181,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
             </button>
             <button
               onClick={() => setActiveTab('notes')}
-              className={`flex-1 py-2 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                 activeTab === 'notes' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -189,7 +189,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
             </button>
             <button
               onClick={() => setActiveTab('patient_info')}
-              className={`flex-1 py-2 rounded-xl font-bold transition-all ${
+              className={`flex-1 py-2 rounded-xl font-bold transition-all cursor-pointer ${
                 activeTab === 'patient_info' ? 'bg-slate-800 text-emerald-400' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -203,7 +203,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
               <div className="flex flex-col h-full justify-between space-y-4">
                 <div className="space-y-3 flex-1 overflow-y-auto pr-1">
                   {chatMessages.map((msg, i) => (
-                    <div key={i} className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 space-y-1">
+                    <div key={i} className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-1">
                       <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400">
                         <span>{msg.sender}</span>
                         <span className="text-[10px] text-slate-500 font-mono">{msg.time}</span>
@@ -224,7 +224,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
                   />
                   <button
                     onClick={handleSendMessage}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-md"
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                   </button>

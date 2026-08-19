@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/common/Navbar';
 import { EmergencyBanner } from './components/common/EmergencyBanner';
 import { Footer } from './components/common/Footer';
@@ -71,11 +72,11 @@ const MainContent: React.FC = () => {
 
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white space-y-4">
-        <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-red-600 to-emerald-500 flex items-center justify-center shadow-2xl shadow-red-600/40 animate-bounce">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-slate-800 dark:text-white space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-xl shadow-red-500/20 animate-pulse">
           <Loader2 className="w-8 h-8 text-white animate-spin" />
         </div>
-        <div className="text-sm font-bold text-slate-300 tracking-wider animate-pulse">
+        <div className="text-sm font-bold text-slate-600 dark:text-slate-300 tracking-wider">
           Loading First Aid Hospital...
         </div>
       </div>
@@ -83,7 +84,7 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-rose-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       {/* Vertical Left Navbar Sidebar */}
       <Navbar
         activeTab={activeTab}
@@ -149,47 +150,51 @@ const MainContent: React.FC = () => {
 
           {activeTab === 'appointments' && (
             <div className="space-y-6 pb-12">
-              <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Calendar className="w-6 h-6 text-rose-400" />
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-xl">
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50">
+                    <Calendar className="w-5 h-5" />
+                  </div>
                   <span>{t('appointmentHistoryTitle')}</span>
                 </h1>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   {t('appointmentHistoryDesc')}
                 </p>
               </div>
 
               {appointments.length === 0 ? (
-                <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center text-slate-400 text-sm">
-                  {t('noActiveAppointments')}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center text-slate-500 dark:text-slate-400 text-sm shadow-sm">
+                  <Calendar className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
+                  <p className="font-semibold">{t('noActiveAppointments')}</p>
+                  <p className="text-xs mt-1 text-slate-400">Book an in-person or video consultation with verified medical specialists.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {appointments.map((apt) => (
                     <div
                       key={apt.appointmentId}
-                      className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-slate-300 dark:hover:border-slate-700"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold shrink-0">
                           <Stethoscope className="w-6 h-6" />
                         </div>
                         <div>
-                          <h3 className="font-bold text-white text-base">{apt.doctorName}</h3>
-                          <p className="text-xs text-indigo-400 font-semibold">{apt.doctorSpecialization}</p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-base">{apt.doctorName}</h3>
+                          <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{apt.doctorSpecialization}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             📅 {apt.appointmentDate} at {apt.startTime} • {apt.hospitalName}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                           apt.status === 'confirmed'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
                             : apt.status === 'completed'
-                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-                            : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            ? 'bg-sky-50 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30'
+                            : 'bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
                         }`}>
                           {apt.status === 'confirmed' ? t('confirmed') : apt.status === 'completed' ? t('completed') : apt.status}
                         </span>
@@ -197,7 +202,7 @@ const MainContent: React.FC = () => {
                         {apt.type === 'video' && apt.meetingId && (
                           <button
                             onClick={() => setActiveVideoMeetingId(apt.meetingId!)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-2xl shadow-lg shadow-emerald-600/30 transition-all animate-pulse"
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-2xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
                           >
                             <Video className="w-4 h-4" />
                             <span>{t('joinVideoCall')}</span>
@@ -223,7 +228,7 @@ const MainContent: React.FC = () => {
         </main>
 
         {/* Global Footer */}
-        <Footer />
+        <Footer onNavigate={setActiveTab} />
 
         {/* Modals & Telemedicine Room */}
         <MedicalProfileModal
@@ -267,13 +272,15 @@ const MainContent: React.FC = () => {
 
 export function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <AppProvider>
-          <MainContent />
-        </AppProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <AppProvider>
+            <MainContent />
+          </AppProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

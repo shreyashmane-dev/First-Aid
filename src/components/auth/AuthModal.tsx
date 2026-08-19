@@ -114,39 +114,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-none">
-        {/* Glow backdrop */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-48 h-48 bg-rose-600/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-none">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 to-emerald-500 flex items-center justify-center text-white shadow-md">
-              <HeartPulse className="w-6 h-6 animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-500/30 flex items-center justify-center text-red-600 dark:text-red-400">
+              <HeartPulse className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
                 {mode === 'signup' ? 'Create Account' : 'Sign In'}
               </h2>
-              <p className="text-xs text-slate-400">First Aid Hospital Identity Access</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">First Aid Hospital Identity Access</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Sign In vs Sign Up Toggle */}
-        <div className="flex items-center bg-slate-800 p-1 rounded-2xl border border-slate-700 text-xs">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
           <button
             type="button"
             onClick={() => setMode('signup')}
-            className={`flex-1 py-2.5 rounded-xl font-bold transition-all ${
-              mode === 'signup' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+            className={`flex-1 py-2 rounded-lg font-bold transition-all cursor-pointer ${
+              mode === 'signup' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Sign Up (Register)
@@ -154,8 +151,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={() => setMode('login')}
-            className={`flex-1 py-2.5 rounded-xl font-bold transition-all ${
-              mode === 'login' ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+            className={`flex-1 py-2 rounded-lg font-bold transition-all cursor-pointer ${
+              mode === 'login' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Sign In
@@ -164,62 +161,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="p-3 bg-red-950/70 border border-red-500/50 rounded-2xl text-red-300 text-xs font-bold flex items-center gap-2">
-            <span className="text-red-400">⚠️</span>
+          <div className="p-3 bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-500/50 rounded-xl text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2">
+            <span>⚠️</span>
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Feedback Alert */}
         {feedback && (
-          <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-2xl text-emerald-300 text-xs flex items-center gap-2 font-bold animate-pulse">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-500/40 rounded-xl text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2 font-bold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>{feedback}</span>
           </div>
         )}
 
-        {/* Role Selector Cards (Only for Sign Up or Login Role Selection) */}
+        {/* Role Selector Cards */}
         <div className="space-y-2">
-          <label className="block text-slate-300 font-bold text-xs">
+          <label className="block text-slate-700 dark:text-slate-300 font-bold text-xs">
             Select Your Role:
           </label>
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setSelectedRole('patient')}
-              className={`p-3 rounded-2xl border text-center space-y-1 transition-all ${
+              className={`p-3 rounded-xl border text-center space-y-1 transition-all cursor-pointer ${
                 selectedRole === 'patient'
-                  ? 'bg-rose-950/60 border-rose-500 text-rose-300 shadow-md ring-1 ring-rose-500'
-                  : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white'
+                  ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-400 dark:border-rose-500 text-rose-700 dark:text-rose-300 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <User className="w-5 h-5 mx-auto text-rose-400" />
+              <User className="w-4 h-4 mx-auto text-rose-600 dark:text-rose-400" />
               <div className="font-extrabold text-[11px]">Patient</div>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedRole('doctor')}
-              className={`p-3 rounded-2xl border text-center space-y-1 transition-all ${
+              className={`p-3 rounded-xl border text-center space-y-1 transition-all cursor-pointer ${
                 selectedRole === 'doctor'
-                  ? 'bg-sky-950/60 border-sky-500 text-sky-300 shadow-md ring-1 ring-sky-500'
-                  : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white'
+                  ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-400 dark:border-sky-500 text-sky-700 dark:text-sky-300 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Stethoscope className="w-5 h-5 mx-auto text-sky-400" />
+              <Stethoscope className="w-4 h-4 mx-auto text-sky-600 dark:text-sky-400" />
               <div className="font-extrabold text-[11px]">Doctor</div>
             </button>
 
             <button
               type="button"
               onClick={() => setSelectedRole('medical_staff')}
-              className={`p-3 rounded-2xl border text-center space-y-1 transition-all ${
+              className={`p-3 rounded-xl border text-center space-y-1 transition-all cursor-pointer ${
                 selectedRole === 'medical_staff'
-                  ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 shadow-md ring-1 ring-emerald-500'
-                  : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:text-white'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-400 dark:border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Building2 className="w-5 h-5 mx-auto text-emerald-400" />
+              <Building2 className="w-4 h-4 mx-auto text-emerald-600 dark:text-emerald-400" />
               <div className="font-extrabold text-[11px]">Medical Staff</div>
             </button>
           </div>
@@ -229,27 +226,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {mode === 'signup' && (
             <div>
-              <label className="block text-slate-300 font-bold mb-1">
+              <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">
                 {selectedRole === 'doctor' ? 'Doctor Full Name' : 'Full Name'}
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   required
                   placeholder={selectedRole === 'doctor' ? 'Dr. Rajesh Sharma' : 'Sarah Connor'}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-slate-300 font-bold mb-1">Email Address</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Email Address</label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="email"
                 required
@@ -262,22 +259,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 }
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-300 font-bold mb-1">Password</label>
+            <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="password"
                 required
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
               />
             </div>
           </div>
@@ -287,61 +284,61 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Contact Phone</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Contact Phone</label>
                   <input
                     type="text"
                     placeholder="+91 98765 43210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Blood Group</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Blood Group</label>
                   <select
                     value={bloodGroup}
                     onChange={(e) => setBloodGroup(e.target.value as BloodGroup)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-rose-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-rose-500 cursor-pointer"
                   >
                     {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
-                      <option key={bg} value={bg} className="bg-slate-900 text-white">{bg}</option>
+                      <option key={bg} value={bg} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{bg}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Known Allergies (Optional)</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Known Allergies (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Penicillin, Peanuts, Latex..."
                   value={allergies}
                   onChange={(e) => setAllergies(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Emergency Contact Name</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Emergency Contact Name</label>
                   <input
                     type="text"
                     placeholder="Spouse / Parent..."
                     value={emergencyContactName}
                     onChange={(e) => setEmergencyContactName(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Emergency Phone</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Emergency Phone</label>
                   <input
                     type="text"
                     placeholder="108 / +91 91100..."
                     value={emergencyContactPhone}
                     onChange={(e) => setEmergencyContactPhone(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-rose-500"
                   />
                 </div>
               </div>
@@ -353,61 +350,61 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Specialization</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Specialization</label>
                   <select
                     value={specialization}
                     onChange={(e) => setSpecialization(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold focus:outline-none focus:border-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-sky-500 cursor-pointer"
                   >
                     {['Cardiology', 'Toxicology', 'Pulmonology', 'Pediatrics', 'Emergency Medicine', 'Neurology', 'Orthopedics'].map(spec => (
-                      <option key={spec} value={spec} className="bg-slate-900 text-white">{spec}</option>
+                      <option key={spec} value={spec} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{spec}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Medical License No.</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Medical License No.</label>
                   <input
                     type="text"
                     required
                     placeholder="MD-CARDIO-881"
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-sky-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Hospital / Clinic Affiliation</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Hospital / Clinic Affiliation</label>
                 <input
                   type="text"
                   placeholder="City General Trauma & ER Center"
                   value={hospitalName}
                   onChange={(e) => setHospitalName(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Professional Phone</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Professional Phone</label>
                 <input
                   type="text"
                   placeholder="+91 (555) 000-1122"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Professional Bio (Optional)</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Professional Bio (Optional)</label>
                 <textarea
                   rows={2}
                   placeholder="Specialist background, certifications, experience..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                 />
               </div>
             </>
@@ -418,46 +415,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Staff Department</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Staff Department</label>
                   <input
                     type="text"
                     required
-                    placeholder="ER Triage / Ambulance Dispatch"
+                    placeholder="ER Triage / Dispatch"
                     value={staffDepartment}
                     onChange={(e) => setStaffDepartment(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">Staff Badge ID</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Staff Badge ID</label>
                   <input
                     type="text"
                     required
                     placeholder="STAFF-8902"
                     value={staffBadgeNumber}
                     onChange={(e) => setStaffBadgeNumber(e.target.value)}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-bold mb-1">Hospital Facility</label>
-                <input
-                  type="text"
-                  placeholder="Apex Health Center"
-                  value={hospitalName}
-                  onChange={(e) => setHospitalName(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
-                />
               </div>
             </>
           )}
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs rounded-2xl shadow-xl shadow-red-600/30 transition-all mt-2 cursor-pointer"
+            className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md shadow-rose-600/20 transition-all mt-2 cursor-pointer"
           >
             {mode === 'login'
               ? `Sign In as ${selectedRole.replace('_', ' ').toUpperCase()}`

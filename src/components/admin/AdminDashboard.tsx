@@ -56,27 +56,27 @@ export const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-semibold">
               <ShieldCheck className="w-4 h-4" /> System Administrator Operations
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">Admin Console</h1>
-            <p className="text-slate-400 text-xs sm:text-sm mt-1">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">Admin Console</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
               Verify medical credentials, manage hospital listings, monitor AI API costs/latency, and audit security logs.
             </p>
           </div>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-2 pt-6 border-t border-slate-800 mt-6 overflow-x-auto">
+        <div className="flex items-center gap-2 pt-6 border-t border-slate-100 dark:border-slate-800 mt-6 overflow-x-auto">
           <button
             onClick={() => setActiveTab('verifications')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'verifications'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-amber-500 text-slate-950 shadow-sm font-bold'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
             <UserCheck className="w-4 h-4" />
@@ -85,10 +85,10 @@ export const AdminDashboard: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('hospitals')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'hospitals'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-amber-500 text-slate-950 shadow-sm font-bold'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
             <Building2 className="w-4 h-4" />
@@ -97,10 +97,10 @@ export const AdminDashboard: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('ai_reports')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'ai_reports'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-amber-500 text-slate-950 shadow-sm font-bold'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
             <Cpu className="w-4 h-4" />
@@ -109,10 +109,10 @@ export const AdminDashboard: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('audit_logs')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'audit_logs'
-                ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-amber-500 text-slate-950 shadow-sm font-bold'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
             <FileText className="w-4 h-4" />
@@ -124,8 +124,8 @@ export const AdminDashboard: React.FC = () => {
       {/* Tab Body */}
       {activeTab === 'verifications' && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-amber-400" />
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <UserCheck className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             <span>Doctor Verification Queue</span>
           </h2>
 
@@ -133,28 +133,28 @@ export const AdminDashboard: React.FC = () => {
             {allDoctors.map((doc) => (
               <div
                 key={doc.doctorId}
-                className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6"
               >
                 <div className="flex items-start gap-4">
                   <img
                     src={doc.photoUrl}
                     alt={doc.name}
-                    className="w-14 h-14 rounded-2xl object-cover border border-slate-700 shrink-0"
+                    className="w-14 h-14 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
                   />
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-white text-base">{doc.name}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-base">{doc.name}</h3>
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                         doc.verificationStatus === 'verified'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
+                          : 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
                       }`}>
                         {doc.verificationStatus}
                       </span>
                     </div>
-                    <p className="text-xs text-indigo-400 font-semibold">{doc.specialization}</p>
-                    <p className="text-xs text-slate-400">
-                      Medical License: <span className="font-mono text-amber-300 font-bold">{doc.licenseNumber}</span>
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{doc.specialization}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Medical License: <span className="font-mono text-amber-600 dark:text-amber-300 font-bold">{doc.licenseNumber}</span>
                     </p>
                     <p className="text-xs text-slate-400">{doc.professionalEmail} • {doc.professionalPhone}</p>
                   </div>
@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
                   {doc.verificationStatus !== 'verified' && (
                     <button
                       onClick={() => verifyDoctor(doc.doctorId, 'verified')}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-2xl shadow-lg shadow-emerald-600/30 transition-all"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
                     >
                       <CheckCircle className="w-4 h-4" />
                       <span>Approve & Verify</span>
@@ -175,7 +175,7 @@ export const AdminDashboard: React.FC = () => {
                   {doc.verificationStatus === 'verified' && (
                     <button
                       onClick={() => verifyDoctor(doc.doctorId, 'suspended')}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-600/40 text-xs font-bold rounded-2xl transition-all"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-600/40 text-xs font-bold rounded-xl transition-all cursor-pointer"
                     >
                       <XCircle className="w-4 h-4" />
                       <span>Suspend License</span>
@@ -191,45 +191,45 @@ export const AdminDashboard: React.FC = () => {
       {activeTab === 'hospitals' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Add Hospital Form */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Plus className="w-4 h-4 text-emerald-400" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl space-y-4">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Register New Hospital</span>
             </h2>
 
             <form onSubmit={handleAddHospital} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Hospital Name</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Hospital Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Apex Health Center"
                   value={hospName}
                   onChange={(e) => setHospName(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Full Address</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Full Address</label>
                 <input
                   type="text"
                   required
                   placeholder="Street, District..."
                   value={hospAddress}
                   onChange={(e) => setHospAddress(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Emergency Telephone</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-bold mb-1">Emergency Telephone</label>
                 <input
                   type="text"
                   placeholder="+1 (555) 911-0000"
                   value={hospPhone}
                   onChange={(e) => setHospPhone(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -239,14 +239,14 @@ export const AdminDashboard: React.FC = () => {
                   id="hospEr"
                   checked={hospEmergency}
                   onChange={(e) => setHospEmergency(e.target.checked)}
-                  className="rounded bg-slate-800 border-slate-700 text-amber-500 focus:ring-amber-500"
+                  className="rounded bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-amber-600 focus:ring-amber-500"
                 />
-                <label htmlFor="hospEr" className="text-slate-300 font-medium">24/7 ER Trauma Unit Available</label>
+                <label htmlFor="hospEr" className="text-slate-700 dark:text-slate-300 font-medium">24/7 ER Trauma Unit Available</label>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl shadow-md transition-all"
+                className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-sm transition-all cursor-pointer"
               >
                 Save Hospital Record
               </button>
@@ -255,20 +255,20 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Hospitals List */}
           <div className="lg:col-span-2 space-y-3">
-            <h2 className="text-base font-bold text-white">Active Registered Hospitals ({hospitals.length})</h2>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Active Registered Hospitals ({hospitals.length})</h2>
             <div className="space-y-3">
               {hospitals.map((h) => (
                 <div
                   key={h.hospitalId}
-                  className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-4 text-xs"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-4 text-xs shadow-sm"
                 >
                   <div>
-                    <h3 className="font-bold text-white text-sm">{h.name}</h3>
-                    <p className="text-slate-400">{h.address}</p>
-                    <p className="text-emerald-400 font-mono mt-0.5">Emergency Line: {h.emergencyPhone}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">{h.name}</h3>
+                    <p className="text-slate-500 dark:text-slate-400">{h.address}</p>
+                    <p className="text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">Emergency Line: {h.emergencyPhone}</p>
                   </div>
                   <span className={`px-2.5 py-1 rounded-full font-bold ${
-                    h.emergencyAvailable ? 'bg-red-600/20 text-red-400 border border-red-500/30' : 'bg-slate-800 text-slate-400'
+                    h.emergencyAvailable ? 'bg-red-50 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                   }`}>
                     {h.emergencyAvailable ? '24/7 ER' : 'Standard Clinic'}
                   </span>
@@ -282,23 +282,23 @@ export const AdminDashboard: React.FC = () => {
       {activeTab === 'ai_reports' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Est. AI Monthly Cost</span>
-              <div className="text-2xl font-extrabold text-emerald-400 font-mono">${totalCost.toFixed(5)}</div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Est. AI Monthly Cost</span>
+              <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">${totalCost.toFixed(5)}</div>
             </div>
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Average Latency</span>
-              <div className="text-2xl font-extrabold text-sky-400 font-mono">535 ms</div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Average Latency</span>
+              <div className="text-2xl font-extrabold text-sky-600 dark:text-sky-400 font-mono">535 ms</div>
             </div>
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Orchestrator Uptime</span>
-              <div className="text-2xl font-extrabold text-amber-400 font-mono">99.9%</div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Orchestrator Uptime</span>
+              <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 font-mono">99.9%</div>
             </div>
           </div>
 
-          <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-emerald-400" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl space-y-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <span>Real-Time AI Request & Cost Log</span>
             </h2>
 
@@ -306,18 +306,18 @@ export const AdminDashboard: React.FC = () => {
               {AI_METRICS_LOG.map((m) => (
                 <div
                   key={m.id}
-                  className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono"
+                  className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded font-bold">
+                    <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-bold">
                       {m.provider} ({m.model})
                     </span>
-                    <span className="text-slate-300">Latency: {m.latencyMs}ms</span>
-                    <span className="text-amber-400">Severity: {m.severity}</span>
+                    <span className="text-slate-600 dark:text-slate-300">Latency: {m.latencyMs}ms</span>
+                    <span className="text-amber-600 dark:text-amber-400">Severity: {m.severity}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-emerald-400 font-bold">${m.estimatedCostUsd.toFixed(5)}</span>
-                    <span className="text-slate-500 block text-[10px]">{new Date(m.timestamp).toLocaleTimeString()}</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">${m.estimatedCostUsd.toFixed(5)}</span>
+                    <span className="text-slate-400 block text-[10px]">{new Date(m.timestamp).toLocaleTimeString()}</span>
                   </div>
                 </div>
               ))}
@@ -327,9 +327,9 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {activeTab === 'audit_logs' && (
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <FileText className="w-5 h-5 text-amber-400" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm dark:shadow-xl space-y-4">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             <span>Audit Trail Logs ({auditLogs.length} Records)</span>
           </h2>
 
@@ -337,17 +337,17 @@ export const AdminDashboard: React.FC = () => {
             {auditLogs.map((log) => (
               <div
                 key={log.logId}
-                className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700 flex items-center justify-between text-xs font-mono"
+                className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs font-mono"
               >
                 <div className="flex items-center gap-3">
-                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-bold">
+                  <span className="px-2 py-0.5 bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded font-bold">
                     {log.action}
                   </span>
-                  <span className="text-slate-300">
+                  <span className="text-slate-700 dark:text-slate-300">
                     Target: {log.targetType} ({log.targetId})
                   </span>
                 </div>
-                <span className="text-slate-500">{new Date(log.timestamp).toLocaleString()}</span>
+                <span className="text-slate-400">{new Date(log.timestamp).toLocaleString()}</span>
               </div>
             ))}
           </div>
