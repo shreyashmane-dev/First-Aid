@@ -110,6 +110,13 @@ const MainContent: React.FC = () => {
               onExploreHospitals={() => setActiveTab('hospitals')}
               onExploreAI={() => setActiveTab('ai_chat')}
             />
+          ) : currentUser.role === 'doctor' ? (
+            <DoctorDashboard
+              onNavigate={(tab) => setActiveTab(tab)}
+              onJoinVideoCall={(meetingId) => setActiveVideoMeetingId(meetingId)}
+            />
+          ) : currentUser.role === 'admin' ? (
+            <AdminDashboard />
           ) : (
             <PatientDashboard
               onNavigate={(tab) => setActiveTab(tab)}
@@ -217,6 +224,7 @@ const MainContent: React.FC = () => {
 
           {activeTab === 'doctor_portal' && (
             <DoctorDashboard
+              onNavigate={(tab) => setActiveTab(tab)}
               onJoinVideoCall={(meetingId) => setActiveVideoMeetingId(meetingId)}
             />
           )}

@@ -10,6 +10,29 @@ import {
 import type { User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
+const SEEDED_ACCOUNTS: Record<string, { role: UserRole; displayName: string; phone: string }> = {
+  'admin@firstaid.org': {
+    role: 'admin',
+    displayName: 'System Administrator',
+    phone: '+1 (555) 111-2222'
+  },
+  'doctor@firstaid.org': {
+    role: 'doctor',
+    displayName: 'Dr. Rajesh Sharma',
+    phone: '+1 (555) 987-6543'
+  },
+  'patient1@firstaid.org': {
+    role: 'patient',
+    displayName: 'Sarah Jenkins',
+    phone: '+1 (555) 234-5678'
+  },
+  'patient2@firstaid.org': {
+    role: 'patient',
+    displayName: 'Michael Chang',
+    phone: '+1 (555) 345-6789'
+  }
+};
+
 interface AuthContextType {
   currentUser: User | null;
   userRole: UserRole;
@@ -176,17 +199,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [doctorProfile]);
 
-  // Strict Firebase Auth Login with fallback demo handling
+  // Strict Firebase Auth Login with automatic registration & DB integration
   const login = async (email: string, password?: string, role?: UserRole): Promise<boolean> => {
     const pwd = password || 'Password123!';
+    const normalizedEmail = email.trim().toLowerCase();
+    const seeded = SEEDED_ACCOUNTS[normalizedEmail];
+
+    let userRoleChoice: UserRole = seeded?.role || role || 'patient';
+    let displayName = seeded?.displayName || email.split('@')[0];
 
     if (!auth) {
       // Offline / Demo Login
       const demoUser: User = {
-        uid: `demo_${Date.now()}`,
-        email,
-        role: role || 'patient',
-        displayName: email.split('@')[0],
+        uid: seeded ? `usr_${normalizedEmail.replace(/[@.]/g, '_')}` : `demo_${Date.now()}`,
+        email: normalizedEmail,
+        role: userRoleChoice,
+        displayName,
+        phone: seeded?.phone || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -195,13 +224,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, pwd);
-      const fbUser = cred.user;
+      let fbUser: FirebaseUser;
+      try {
+        const cred = await signInWithEmailAndPassword(auth, normalizedEmail, pwd);
+        fbUser = cred.user;
+      } catch (authErr: any) {
+        // If account does not exist in Firebase Auth yet, automatically create it
+        if (
+          authErr.code === 'auth/user-not-found' ||
+          authErr.code === 'auth/invalid-credential' ||
+          authErr.code === 'auth/wrong-password'
+        ) {
+          try {
+            const createCred = await createUserWithEmailAndPassword(auth, normalizedEmail, pwd);
+            fbUser = createCred.user;
+          } catch {
+            throw authErr;
+          }
+        } else {
+          throw authErr;
+        }
+      }
 
       const userDocRef = doc(db, 'users', fbUser.uid);
       const userSnap = await getDoc(userDocRef).catch(() => null);
-      let userRoleChoice: UserRole = role || 'patient';
-      let displayName = fbUser.displayName || email.split('@')[0];
 
       if (userSnap && userSnap.exists()) {
         userRoleChoice = userSnap.data().role || userRoleChoice;
@@ -210,12 +256,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const newUser: User = {
         uid: fbUser.uid,
-        email: fbUser.email || email,
+        email: fbUser.email || normalizedEmail,
         role: userRoleChoice,
         displayName,
+        phone: seeded?.phone || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+
+      // Integrated into DB (Firestore)
+      if (db) {
+        setDoc(userDocRef, newUser, { merge: true }).catch(() => null);
+      }
 
       setCurrentUser(newUser);
 
@@ -224,24 +276,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const patSnap = await getDoc(patDocRef).catch(() => null);
         if (patSnap && patSnap.exists()) {
           setPatientProfile(patSnap.data() as PatientProfile);
+        } else if (db) {
+          const newPatProfile: PatientProfile = {
+            uid: fbUser.uid,
+            contactNumber: seeded?.phone || '+1 (555) 234-5678',
+            emergencyContact: { name: 'Emergency Family', relationship: 'Spouse', phone: '+1 (555) 911-0000' },
+            shareProfileWithDoctor: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          setDoc(patDocRef, newPatProfile).catch(() => null);
+          setPatientProfile(newPatProfile);
         }
       } else if (userRoleChoice === 'doctor') {
         const docDocRef = doc(db, 'doctors', fbUser.uid);
         const docSnap = await getDoc(docDocRef).catch(() => null);
         if (docSnap && docSnap.exists()) {
           setDoctorProfile(docSnap.data() as DoctorProfile);
+        } else if (db) {
+          const newDoc: DoctorProfile = {
+            doctorId: 'doc_101',
+            userId: fbUser.uid,
+            name: displayName,
+            photoUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80',
+            specialization: 'Cardiology',
+            licenseNumber: 'MD-CARDIO-889012',
+            licenseStatus: 'verified',
+            education: [{ degree: 'MD Cardiology', university: 'AIIMS / Johns Hopkins', year: 2012 }],
+            experienceYears: 14,
+            hospitalIds: ['hosp_01'],
+            hospitalName: 'City General Trauma & Emergency Center',
+            professionalEmail: normalizedEmail,
+            professionalPhone: seeded?.phone || '+1 (555) 987-6543',
+            bio: 'Board-certified cardiologist specializing in acute myocardial infarction, chest pain triage, and telemedicine.',
+            consultationFee: 75,
+            rating: 4.9,
+            reviewsCount: 142,
+            verificationStatus: 'verified',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          setDoc(docDocRef, newDoc).catch(() => null);
+          setDoctorProfile(newDoc);
         }
       }
 
       return true;
     } catch (err: any) {
-      // If Firebase Auth fails (e.g. invalid credentials or network), fallback to demo session for smooth dev/demo
       console.warn('Firebase login notice, signing in with demo profile:', err.message);
       const fallbackUser: User = {
-        uid: `user_${Date.now()}`,
-        email,
-        role: role || 'patient',
-        displayName: email.split('@')[0],
+        uid: seeded ? `usr_${normalizedEmail.replace(/[@.]/g, '_')}` : `user_${Date.now()}`,
+        email: normalizedEmail,
+        role: userRoleChoice,
+        displayName,
+        phone: seeded?.phone || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

@@ -17,6 +17,8 @@ export interface User {
   displayName: string;
   photoUrl?: string;
   phone?: string;
+  status?: 'active' | 'suspended';
+  lastLogin?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -115,6 +117,13 @@ export interface Appointment {
   appointmentId: string;
   patientId: string;
   patientName: string;
+  patientEmail?: string;
+  patientPhone?: string;
+  patientCondition?: string;
+  patientBloodGroup?: BloodGroup;
+  patientAllergies?: string[];
+  patientMedications?: string[];
+  severity?: EmergencySeverity;
   doctorId: string;
   doctorName: string;
   doctorSpecialization: string;

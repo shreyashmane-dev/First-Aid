@@ -7,17 +7,20 @@ import type {
   FirstAidArticle,
   AIChatMessage,
   AuditLog,
-  NotificationItem
+  NotificationItem,
+  User,
+  UserRole
 } from '../types';
 import {
   INITIAL_MEDICAL_PROFILE,
   INITIAL_HOSPITALS,
   INITIAL_DOCTORS,
   INITIAL_FIRST_AID_ARTICLES,
-  INITIAL_APPOINTMENTS
+  INITIAL_APPOINTMENTS,
+  INITIAL_USERS
 } from '../services/mockData';
 import { db } from '../services/firebase';
-import { collection, doc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 interface AppContextType {
   medicalProfile: MedicalProfile;
@@ -38,9 +41,16 @@ interface AppContextType {
     startTime: string,
     endTime: string,
     type: 'in_person' | 'video',
-    reason: string
+    reason: string,
+    patientCondition?: string
   ) => { success: boolean; error?: string; appointment?: Appointment };
   updateAppointmentStatus: (appointmentId: string, status: Appointment['status'], notes?: string) => void;
+  users: User[];
+  updateUserRole: (uid: string, role: UserRole) => void;
+  updateUserStatus: (uid: string, status: 'active' | 'suspended') => void;
+  updateUserDetails: (uid: string, updates: Partial<User>) => void;
+  deleteUser: (uid: string) => void;
+  addUser: (user: User) => void;
   firstAidArticles: FirstAidArticle[];
   activeArticle: FirstAidArticle | null;
   setActiveArticle: (article: FirstAidArticle | null) => void;
@@ -60,6 +70,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [medicalProfile, setMedicalProfile] = useState<MedicalProfile>(() => {
     const saved = localStorage.getItem('first_aid_med_profile');
     return saved ? JSON.parse(saved) : INITIAL_MEDICAL_PROFILE;
+  });
+
+  // Users state (for Admin management)
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('first_aid_all_users');
+    return saved ? JSON.parse(saved) : INITIAL_USERS;
   });
 
   // Hospitals state
@@ -174,9 +190,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       );
 
+      // Sync users from Firestore
+      const unsubUsers = onSnapshot(
+        collection(db, 'users'),
+        (snap) => {
+          if (!snap.empty) {
+            const list: User[] = [];
+            snap.forEach(docSnap => list.push(docSnap.data() as User));
+            setUsers(prev => {
+              const merged = [...list];
+              prev.forEach(p => {
+                if (!merged.some(m => m.uid === p.uid)) {
+                  merged.push(p);
+                }
+              });
+              return merged;
+            });
+          }
+        },
+        (err) => {
+          console.warn('Firestore users listener note:', err.message);
+        }
+      );
+
       return () => {
         unsubApts();
         unsubDocs();
+        unsubUsers();
       };
     } catch (err) {
       console.warn('Firestore real-time sync listener note:', err);
@@ -199,6 +239,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('first_aid_appointments', JSON.stringify(appointments));
   }, [appointments]);
+
+  useEffect(() => {
+    localStorage.setItem('first_aid_all_users', JSON.stringify(users));
+  }, [users]);
+
+  // Admin User Account Management Handlers
+  const updateUserRole = (uid: string, role: UserRole) => {
+    setUsers(prev =>
+      prev.map(u => (u.uid === uid ? { ...u, role, updatedAt: new Date().toISOString() } : u))
+    );
+    addAuditLog('USER_ROLE_UPDATED', 'User', uid, { role });
+    if (db) {
+      updateDoc(doc(db, 'users', uid), { role, updatedAt: new Date().toISOString() }).catch(e =>
+        console.warn('Firestore user role update note:', e)
+      );
+    }
+  };
+
+  const updateUserStatus = (uid: string, status: 'active' | 'suspended') => {
+    setUsers(prev =>
+      prev.map(u => (u.uid === uid ? { ...u, status, updatedAt: new Date().toISOString() } : u))
+    );
+    addAuditLog('USER_STATUS_UPDATED', 'User', uid, { status });
+    if (db) {
+      updateDoc(doc(db, 'users', uid), { status, updatedAt: new Date().toISOString() }).catch(e =>
+        console.warn('Firestore user status update note:', e)
+      );
+    }
+  };
+
+  const updateUserDetails = (uid: string, updates: Partial<User>) => {
+    setUsers(prev =>
+      prev.map(u => (u.uid === uid ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u))
+    );
+    addAuditLog('USER_DETAILS_UPDATED', 'User', uid, updates);
+    if (db) {
+      updateDoc(doc(db, 'users', uid), { ...updates, updatedAt: new Date().toISOString() }).catch(e =>
+        console.warn('Firestore user details update note:', e)
+      );
+    }
+  };
+
+  const deleteUser = (uid: string) => {
+    setUsers(prev => prev.filter(u => u.uid !== uid));
+    addAuditLog('USER_DELETED', 'User', uid);
+    if (db) {
+      deleteDoc(doc(db, 'users', uid)).catch(e => console.warn('Firestore delete user note:', e));
+    }
+  };
+
+  const addUser = (newUser: User) => {
+    setUsers(prev => [newUser, ...prev.filter(u => u.uid !== newUser.uid)]);
+    addAuditLog('USER_CREATED', 'User', newUser.uid, { email: newUser.email, role: newUser.role });
+    if (db) {
+      setDoc(doc(db, 'users', newUser.uid), newUser).catch(e => console.warn('Firestore add user note:', e));
+    }
+  };
 
   const addAuditLog = (action: string, targetType: string, targetId: string, metadata?: any) => {
     const newLog: AuditLog = {
@@ -262,7 +359,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Double-booking prevention algorithm
+  // Double-booking prevention algorithm & Patient Condition attachment
   const bookAppointment = (
     patientId: string,
     patientName: string,
@@ -273,7 +370,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     startTime: string,
     endTime: string,
     type: 'in_person' | 'video',
-    reason: string
+    reason: string,
+    patientCondition?: string
   ): { success: boolean; error?: string; appointment?: Appointment } => {
     const existingConflict = appointments.find(apt =>
       apt.doctorId === doctorId &&
@@ -292,10 +390,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const docRef = doctors.find(d => d.doctorId === doctorId);
 
+    const conditionText = patientCondition || (medicalProfile.medicalConditions.length > 0
+      ? medicalProfile.medicalConditions.join(', ')
+      : 'General Consultation');
+
     const newApt: Appointment = {
       appointmentId: `apt_${Date.now()}`,
       patientId,
       patientName,
+      patientCondition: conditionText,
+      patientBloodGroup: medicalProfile.bloodGroup,
+      patientAllergies: medicalProfile.allergies,
+      patientMedications: medicalProfile.medications,
       doctorId,
       doctorName,
       doctorSpecialization: specialization,
@@ -304,9 +410,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       startTime,
       endTime,
       type,
-      status: 'confirmed',
+      status: 'requested', // Sent to doctor for approval!
       reason,
-      meetingId: type === 'video' ? `meet_${Date.now()}` : undefined,
+      meetingId: type === 'video' ? `meet_aid_${Date.now().toString(36)}` : undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -317,18 +423,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newNotif: NotificationItem = {
       notificationId: `notif_${Date.now()}`,
       userId: patientId,
-      title: 'Appointment Confirmed',
-      body: `Appointment confirmed with Dr. ${doctorName} for ${date} at ${startTime}.`,
+      title: 'Appointment Request Submitted',
+      body: `Your request with Dr. ${doctorName} for ${date} at ${startTime} has been sent and is awaiting approval.`,
       type: 'appointment_update',
       read: false,
       createdAt: new Date().toISOString()
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    addAuditLog('APPOINTMENT_BOOKED', 'Appointment', newApt.appointmentId, {
+    addAuditLog('APPOINTMENT_REQUESTED', 'Appointment', newApt.appointmentId, {
       doctorId,
       date,
-      time: startTime
+      time: startTime,
+      condition: conditionText
     });
 
     if (db) {
@@ -344,21 +451,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     status: Appointment['status'],
     notes?: string
   ) => {
+    let affectedAppointment: Appointment | undefined;
+
     setAppointments(prev =>
       prev.map(apt => {
         if (apt.appointmentId === appointmentId) {
-          return {
+          affectedAppointment = {
             ...apt,
             status,
             consultationNotes: notes || apt.consultationNotes,
             updatedAt: new Date().toISOString()
           };
+          return affectedAppointment;
         }
         return apt;
       })
     );
 
-    addAuditLog('APPOINTMENT_STATUS_UPDATED', 'Appointment', appointmentId, { status });
+    // If accepted or rejected, create an alert notification for the patient
+    if (status === 'confirmed' || status === 'rejected') {
+      const statusText = status === 'confirmed' ? 'Accepted & Confirmed' : 'Declined';
+      const notifBody = status === 'confirmed'
+        ? `Dr. has confirmed your appointment for ${affectedAppointment?.appointmentDate || 'scheduled date'}. ${affectedAppointment?.type === 'video' ? 'Video consultation room is ready!' : ''}`
+        : `Your appointment request was declined: ${notes || 'Doctor unavailable at that time slot'}.`;
+
+      const notifItem: NotificationItem = {
+        notificationId: `notif_${Date.now()}`,
+        userId: affectedAppointment?.patientId || 'patient',
+        title: `Appointment ${statusText}`,
+        body: notifBody,
+        type: 'appointment_update',
+        read: false,
+        createdAt: new Date().toISOString()
+      };
+      setNotifications(prev => [notifItem, ...prev]);
+
+      if (db) {
+        setDoc(doc(db, 'notifications', notifItem.notificationId), notifItem).catch(() => null);
+      }
+    }
+
+    addAuditLog('APPOINTMENT_STATUS_UPDATED', 'Appointment', appointmentId, { status, notes });
 
     if (db) {
       updateDoc(doc(db, 'appointments', appointmentId), {
@@ -401,6 +534,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         appointments,
         bookAppointment,
         updateAppointmentStatus,
+        users,
+        updateUserRole,
+        updateUserStatus,
+        updateUserDetails,
+        deleteUser,
+        addUser,
         firstAidArticles,
         activeArticle,
         setActiveArticle,

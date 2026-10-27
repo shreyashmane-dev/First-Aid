@@ -159,6 +159,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {/* Quick Test Accounts Bar */}
+        <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+          <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+            ⚡ Quick Demo Accounts (1-Click Fill & Sign In):
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            {[
+              { label: '👑 Admin', email: 'admin@firstaid.org', pass: 'AdminPassword123!', role: 'admin' },
+              { label: '🩺 Doctor', email: 'doctor@firstaid.org', pass: 'DoctorPassword123!', role: 'doctor' },
+              { label: '👤 Patient 1', email: 'patient1@firstaid.org', pass: 'PatientPassword123!', role: 'patient' },
+              { label: '👤 Patient 2', email: 'patient2@firstaid.org', pass: 'PatientPassword123!', role: 'patient' }
+            ].map((acc) => (
+              <button
+                type="button"
+                key={acc.email}
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword(acc.pass);
+                  setSelectedRole(acc.role as any);
+                  setMode('login');
+                }}
+                className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer text-center ${
+                  email === acc.email
+                    ? 'bg-rose-600 text-white border-rose-500 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-rose-400'
+                }`}
+              >
+                {acc.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Error Alert */}
         {errorMessage && (
           <div className="p-3 bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-500/50 rounded-xl text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2">
