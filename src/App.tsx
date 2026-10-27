@@ -75,22 +75,26 @@ const MainContent: React.FC = () => {
       return;
     }
 
-    const meetingIds = Array.from(new Set(
-      appointments
-        .filter(apt => apt.type === 'video' && apt.meetingId)
-        .filter(apt => {
-          if (userRole === 'patient') {
-            return apt.patientId === currentUser.uid
-              || apt.patientEmail === currentUser.email
-              || apt.patientName === currentUser.displayName;
-          }
-          if (userRole === 'doctor') {
-            return apt.doctorName === currentUser.displayName;
-          }
-          return false;
-        })
-        .map(apt => apt.meetingId!)
-    ));
+    const userMeetingIds = appointments
+      .filter(apt => apt.type === 'video' && apt.meetingId)
+      .filter(apt => {
+        if (userRole === 'patient') {
+          return apt.patientId === currentUser.uid
+            || apt.patientEmail?.toLowerCase() === currentUser.email?.toLowerCase()
+            || apt.patientName === currentUser.displayName;
+        }
+        if (userRole === 'doctor') {
+          return true;
+        }
+        return false;
+      })
+      .map(apt => apt.meetingId!);
+
+    const allVideoMeetingIds = appointments
+      .filter(apt => apt.type === 'video' && apt.meetingId)
+      .map(apt => apt.meetingId!);
+
+    const meetingIds = Array.from(new Set(userMeetingIds.length > 0 ? userMeetingIds : allVideoMeetingIds));
 
     if (meetingIds.length === 0) return;
 
