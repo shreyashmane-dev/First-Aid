@@ -2,48 +2,48 @@ import type { Hospital, DoctorProfile, FirstAidArticle, Appointment, PatientProf
 
 export const INITIAL_USERS: User[] = [
   {
-    uid: 'admin_001',
+    uid: 'FldLmZ4PZwS81LS6pqGY0lr8Dvy2',
     email: 'admin@firstaid.org',
     role: 'admin',
     displayName: 'System Administrator',
     phone: '+1 (555) 111-2222',
     status: 'active',
-    lastLogin: new Date().toISOString(),
+    lastLogin: '2026-02-16T17:00:00Z',
     createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: new Date().toISOString()
+    updatedAt: '2026-01-01T00:00:00Z'
   },
   {
-    uid: 'doc_101_user',
+    uid: 'Uty02JnmwbOgXnDbdMxjAmXEc0H3',
     email: 'doctor@firstaid.org',
     role: 'doctor',
     displayName: 'Dr. Rajesh Sharma',
     phone: '+1 (555) 987-6543',
     status: 'active',
-    lastLogin: new Date().toISOString(),
+    lastLogin: '2026-02-16T16:00:00Z',
     createdAt: '2026-01-10T09:00:00Z',
-    updatedAt: new Date().toISOString()
+    updatedAt: '2026-01-10T09:00:00Z'
   },
   {
-    uid: 'pat_001',
+    uid: 'symfVsUx20eXAknJ7ce8h9M1bY03',
     email: 'patient1@firstaid.org',
     role: 'patient',
     displayName: 'Sarah Jenkins',
     phone: '+1 (555) 234-5678',
     status: 'active',
-    lastLogin: new Date().toISOString(),
+    lastLogin: '2026-02-16T14:20:00Z',
     createdAt: '2026-01-15T08:00:00Z',
-    updatedAt: new Date().toISOString()
+    updatedAt: '2026-01-15T08:00:00Z'
   },
   {
-    uid: 'pat_002',
+    uid: 'ZuggpK6Odcf0f4ZwVDSFeFksdcc2',
     email: 'patient2@firstaid.org',
     role: 'patient',
     displayName: 'Michael Chang',
     phone: '+1 (555) 345-6789',
     status: 'active',
-    lastLogin: new Date().toISOString(),
+    lastLogin: '2026-02-15T18:30:00Z',
     createdAt: '2026-01-20T11:15:00Z',
-    updatedAt: new Date().toISOString()
+    updatedAt: '2026-01-20T11:15:00Z'
   }
 ];
 
@@ -154,7 +154,7 @@ export const INITIAL_HOSPITALS: Hospital[] = [
 export const INITIAL_DOCTORS: DoctorProfile[] = [
   {
     doctorId: 'doc_101',
-    userId: 'doc_101_user',
+    userId: 'Uty02JnmwbOgXnDbdMxjAmXEc0H3',
     name: 'Dr. Rajesh Sharma',
     photoUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80',
     specialization: 'Cardiology',
@@ -167,7 +167,7 @@ export const INITIAL_DOCTORS: DoctorProfile[] = [
     ],
     experienceYears: 14,
     hospitalIds: ['hosp_01', 'hosp_02'],
-    hospitalName: 'St. Jude Heart & City General Center',
+    hospitalName: 'City General Trauma & Emergency Center',
     professionalEmail: 'doctor@firstaid.org',
     professionalPhone: '+1 (555) 345-6789',
     bio: 'Board-certified cardiologist specializing in acute myocardial infarction, chest pain triage, and online video consultations.',
@@ -178,86 +178,6 @@ export const INITIAL_DOCTORS: DoctorProfile[] = [
     verificationStatus: 'verified',
     createdAt: '2026-01-10T00:00:00Z',
     updatedAt: '2026-01-10T00:00:00Z'
-  },
-  {
-    doctorId: 'doc_102',
-    userId: 'doc_102_user',
-    name: 'Dr. Elena Rostova',
-    photoUrl: 'https://images.unsplash.com/photo-1594824813566-88855ce78906?auto=format&fit=crop&w=400&q=80',
-    specialization: 'Emergency Medicine',
-    subSpecialization: 'Trauma & First-Aid Toxicology',
-    licenseNumber: 'MD-EMERG-443210',
-    licenseStatus: 'verified',
-    education: [
-      { degree: 'Residency in Emergency Medicine', university: 'Harvard Medical School', year: 2015 },
-      { degree: 'MD', university: 'Stanford University', year: 2011 }
-    ],
-    experienceYears: 11,
-    hospitalIds: ['hosp_01', 'hosp_04'],
-    hospitalName: 'Apex Toxicology & City General Trauma',
-    professionalEmail: 'dr.rostova@firstaidhospital.org',
-    professionalPhone: '+1 (555) 456-7890',
-    bio: 'Emergency care physician with decade-long experience in snake bites, burn triage, choking rescue protocols, and online urgent video consultations.',
-    consultationFee: 60,
-    rating: 4.8,
-    reviewsCount: 98,
-    verificationDocumentUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80',
-    verificationStatus: 'verified',
-    createdAt: '2026-01-12T00:00:00Z',
-    updatedAt: '2026-01-12T00:00:00Z'
-  },
-  {
-    doctorId: 'doc_103',
-    userId: 'doc_103_user',
-    name: 'Dr. Marcus Vance',
-    photoUrl: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=400&q=80',
-    specialization: 'Pulmonology',
-    subSpecialization: 'Severe Asthma & Respiratory Emergency',
-    licenseNumber: 'MD-PULMO-991122',
-    licenseStatus: 'verified',
-    education: [
-      { degree: 'Fellowship in Pulmonary Critical Care', university: 'Mayo Clinic', year: 2016 },
-      { degree: 'MD', university: 'Columbia University', year: 2012 }
-    ],
-    experienceYears: 10,
-    hospitalIds: ['hosp_02'],
-    hospitalName: 'St. Jude Heart & Respiratory Care',
-    professionalEmail: 'dr.vance@firstaidhospital.org',
-    professionalPhone: '+1 (555) 567-8901',
-    bio: 'Expert pulmonologist focused on severe asthma attacks, chronic obstructive pulmonary diseases, and telemedicine management.',
-    consultationFee: 70,
-    rating: 4.9,
-    reviewsCount: 115,
-    verificationDocumentUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80',
-    verificationStatus: 'verified',
-    createdAt: '2026-01-14T00:00:00Z',
-    updatedAt: '2026-01-14T00:00:00Z'
-  },
-  {
-    doctorId: 'doc_104',
-    userId: 'doc_104_user',
-    name: 'Dr. Anita Desai (Pending Verification)',
-    photoUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80',
-    specialization: 'Pediatrics',
-    subSpecialization: 'Pediatric First Aid & Choking Intervention',
-    licenseNumber: 'MD-PEDI-771100-PENDING',
-    licenseStatus: 'pending',
-    education: [
-      { degree: 'MD Pediatrics', university: 'Boston Children’s Hospital', year: 2020 }
-    ],
-    experienceYears: 6,
-    hospitalIds: ['hosp_03'],
-    hospitalName: 'Metropolitan Children Hospital',
-    professionalEmail: 'dr.anita@firstaidhospital.org',
-    professionalPhone: '+1 (555) 678-9012',
-    bio: 'Dedicated pediatrician specializing in infant first aid, allergic reactions, and child care.',
-    consultationFee: 50,
-    rating: 4.5,
-    reviewsCount: 12,
-    verificationDocumentUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80',
-    verificationStatus: 'pending',
-    createdAt: '2026-02-01T00:00:00Z',
-    updatedAt: '2026-02-01T00:00:00Z'
   }
 ];
 
@@ -528,7 +448,7 @@ export const INITIAL_FIRST_AID_ARTICLES: FirstAidArticle[] = [
 export const INITIAL_APPOINTMENTS: Appointment[] = [
   {
     appointmentId: 'apt_001',
-    patientId: 'pat_001',
+    patientId: 'symfVsUx20eXAknJ7ce8h9M1bY03',
     patientName: 'Sarah Jenkins',
     patientEmail: 'patient1@firstaid.org',
     patientPhone: '+1 (555) 234-5678',
@@ -554,7 +474,7 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
   },
   {
     appointmentId: 'apt_002',
-    patientId: 'pat_002',
+    patientId: 'ZuggpK6Odcf0f4ZwVDSFeFksdcc2',
     patientName: 'Michael Chang',
     patientEmail: 'patient2@firstaid.org',
     patientPhone: '+1 (555) 345-6789',
@@ -577,31 +497,5 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     meetingId: 'meet_firstaid_101_883',
     createdAt: '2026-02-16T11:20:00Z',
     updatedAt: '2026-02-16T11:20:00Z'
-  },
-  {
-    appointmentId: 'apt_003',
-    patientId: 'pat_003',
-    patientName: 'Ananya Deshmukh',
-    patientEmail: 'ananya.deshmukh@firstaidhospital.org',
-    patientPhone: '+91 98220 54321',
-    patientCondition: 'Acute Wheezing, Seasonal Bronchospasm',
-    patientBloodGroup: 'B+',
-    patientAllergies: ['Dust Mites', 'Aspirin'],
-    patientMedications: ['Budesonide Inhaler'],
-    severity: 'MODERATE',
-    doctorId: 'doc_103',
-    doctorName: 'Dr. Marcus Vance',
-    doctorSpecialization: 'Pulmonology',
-    hospitalId: 'hosp_02',
-    hospitalName: 'St. Jude Heart & Respiratory Care',
-    appointmentDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    startTime: '10:00',
-    endTime: '10:30',
-    type: 'video',
-    reason: 'Asthma action plan evaluation and spirometry check',
-    status: 'requested',
-    meetingId: 'meet_firstaid_103_449',
-    createdAt: '2026-02-16T12:00:00Z',
-    updatedAt: '2026-02-16T12:00:00Z'
   }
 ];

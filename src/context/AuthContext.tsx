@@ -45,7 +45,6 @@ interface AuthContextType {
   registerDoctor: (email: string, password: string, name: string, specialization: string, licenseNumber: string) => Promise<boolean>;
   updatePatientProfile: (updated: Partial<PatientProfile>) => void;
   updateDoctorProfile: (updated: Partial<DoctorProfile>) => void;
-  switchRoleDemo: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -323,20 +322,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return true;
     } catch (err: any) {
-      console.warn('Firebase login notice, signing in with demo profile:', err.message);
-      const fallbackUser: User = {
-        uid: seeded ? `usr_${normalizedEmail.replace(/[@.]/g, '_')}` : `user_${Date.now()}`,
-        email: normalizedEmail,
-        role: userRoleChoice,
-        displayName,
-        phone: seeded?.phone || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setCurrentUser(fallbackUser);
-      return true;
+      console.error('Firebase Auth sign-in failed:', err.message);
+      throw err;
     }
   };
+
 
   const logout = () => {
     if (auth) {
@@ -493,25 +483,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const switchRoleDemo = (role: UserRole) => {
-    if (currentUser) {
-      const updatedUser = { ...currentUser, role };
-      setCurrentUser(updatedUser);
-      localStorage.setItem('first_aid_user', JSON.stringify(updatedUser));
-    } else {
-      const demoUser: User = {
-        uid: `demo_${Date.now()}`,
-        email: `${role}@firstaid.org`,
-        role,
-        displayName: `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setCurrentUser(demoUser);
-      localStorage.setItem('first_aid_user', JSON.stringify(demoUser));
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -526,7 +497,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         registerDoctor,
         updatePatientProfile,
         updateDoctorProfile,
-        switchRoleDemo
       }}
     >
       {children}

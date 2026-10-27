@@ -13,7 +13,6 @@ import {
   Calendar,
   UserCheck,
   LogOut,
-  Sliders,
   ShieldCheck,
   User,
   Lock,
@@ -40,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenMedicalProfile,
   onOpenPrivacyData
 }) => {
-  const { currentUser, userRole, logout, switchRoleDemo } = useAuth();
+  const { currentUser, userRole, logout } = useAuth();
   const { notifications } = useApp();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
@@ -305,22 +304,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
               <ChevronRightIcon className="w-4 h-4 text-slate-400" />
             </button>
-
-            <div className="flex items-center justify-between p-3 bg-slate-100/70 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <Sliders className="w-3.5 h-3.5" />
-                <span>{t('role')}</span>
-              </div>
-              <select
-                value={userRole}
-                onChange={(e) => switchRoleDemo(e.target.value as any)}
-                className="bg-transparent text-emerald-600 dark:text-emerald-400 font-bold focus:outline-none cursor-pointer"
-              >
-                <option value="patient" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('patient')}</option>
-                <option value="doctor" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('doctor')}</option>
-                <option value="admin" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('admin')}</option>
-              </select>
-            </div>
           </div>
         </div>
 
