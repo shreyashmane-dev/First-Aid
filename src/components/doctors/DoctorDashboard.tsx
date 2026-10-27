@@ -535,7 +535,7 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onJoinVideoCal
                       )}
 
                       {/* CONFIRMED CONTROLS: LAUNCH REAL VIDEO CALL */}
-                      {isConfirmed && isVideo && apt.meetingId && (
+                      {isVideo && apt.meetingId && (
                         <button
                           onClick={() => onJoinVideoCall(apt.meetingId!)}
                           className="flex items-center gap-2.5 px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-600/40 hover:scale-105 transition-all animate-pulse cursor-pointer"

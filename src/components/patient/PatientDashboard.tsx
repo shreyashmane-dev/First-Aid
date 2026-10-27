@@ -42,8 +42,11 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
   const hotlines = emergencyHotlineService.getHotlines();
 
   const activeUpcomingAppointment = appointments.find(
+    a => (a.status === 'confirmed' || a.status === 'requested') &&
+         (a.patientEmail === currentUser?.email || a.patientId === currentUser?.uid)
+  ) || appointments.find(
     a => a.status === 'confirmed' || a.status === 'requested'
-  );
+  ) || appointments[0];
 
   return (
     <div className="space-y-10 pb-16 animate-fade-in">

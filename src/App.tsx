@@ -16,6 +16,7 @@ import { DoctorDirectory } from './components/doctors/DoctorDirectory';
 import { AppointmentBookingModal } from './components/doctors/AppointmentBookingModal';
 import { DoctorDashboard } from './components/doctors/DoctorDashboard';
 import { VideoConsultationRoom } from './components/telemedicine/VideoConsultationRoom';
+import { IncomingVideoCall } from './components/telemedicine/IncomingVideoCall';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AuthModal } from './components/auth/AuthModal';
 import { PrivacyDataModal } from './components/patient/PrivacyDataModal';
@@ -23,9 +24,11 @@ import { LandingPage } from './components/common/LandingPage';
 import type { DoctorProfile, Hospital } from './types';
 import confetti from 'canvas-confetti';
 import { Calendar, Video, Stethoscope, Loader2 } from 'lucide-react';
+import { db } from './services/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const MainContent: React.FC = () => {
-  const { currentUser, isAuthLoading } = useAuth();
+  const { currentUser, isAuthLoading, userRole } = useAuth();
   const { doctors, appointments } = useApp();
   const { t } = useLanguage();
 
@@ -63,6 +66,55 @@ const MainContent: React.FC = () => {
   const [selectedDoctorForBooking, setSelectedDoctorForBooking] = useState<DoctorProfile | null>(null);
   const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
   const [activeVideoMeetingId, setActiveVideoMeetingId] = useState<string | null>(null);
+  const [incomingCall, setIncomingCall] = useState<{ meetingId: string; fromName: string; fromRole: string } | null>(null);
+
+  // Ring the other person when a doctor or patient opens a video appointment.
+  useEffect(() => {
+    if (!db || !currentUser || activeVideoMeetingId) {
+      setIncomingCall(null);
+      return;
+    }
+
+    const meetingIds = Array.from(new Set(
+      appointments
+        .filter(apt => apt.type === 'video' && apt.meetingId)
+        .filter(apt => {
+          if (userRole === 'patient') {
+            return apt.patientId === currentUser.uid
+              || apt.patientEmail === currentUser.email
+              || apt.patientName === currentUser.displayName;
+          }
+          if (userRole === 'doctor') {
+            return apt.doctorName === currentUser.displayName;
+          }
+          return false;
+        })
+        .map(apt => apt.meetingId!)
+    ));
+
+    if (meetingIds.length === 0) return;
+
+    const unsubs = meetingIds.map(meetingId =>
+      onSnapshot(doc(db, 'calls', meetingId), snap => {
+        const data = snap.data();
+        if (!data || data.ended || data.status === 'ended' || data.status === 'connected') {
+          setIncomingCall(prev => (prev?.meetingId === meetingId ? null : prev));
+          return;
+        }
+        const isRinging = (data.status === 'ringing' || data.status === 'calling');
+        const initiator = data.startedBy || data.callerRole;
+        if (isRinging && initiator && initiator !== userRole) {
+          setIncomingCall({
+            meetingId,
+            fromName: data.startedByName || data.callerName || (initiator === 'doctor' ? 'Dr. Rajesh Sharma' : 'Patient'),
+            fromRole: initiator
+          });
+        }
+      }, err => console.warn('Incoming call listener note:', err))
+    );
+
+    return () => unsubs.forEach(u => u());
+  }, [appointments, currentUser, userRole, activeVideoMeetingId]);
 
   // Auto-launch video room if URL contains ?meeting=... or ?call=...
   useEffect(() => {
@@ -190,7 +242,9 @@ const MainContent: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
-                  {appointments.map((apt) => (
+                  {(userRole === 'patient' && appointments.some(a => a.patientEmail === currentUser?.email || a.patientId === currentUser?.uid)
+  ? appointments.filter(a => a.patientEmail === currentUser?.email || a.patientId === currentUser?.uid)
+  : appointments).map((apt) => (
                     <div
                       key={apt.appointmentId}
                       className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -279,6 +333,18 @@ const MainContent: React.FC = () => {
           isOpen={isPrivacyDataOpen}
           onClose={() => setIsPrivacyDataOpen(false)}
         />
+
+        {incomingCall && !activeVideoMeetingId && (
+          <IncomingVideoCall
+            callerName={incomingCall.fromName}
+            callerRole={incomingCall.fromRole}
+            onAccept={() => {
+              setActiveVideoMeetingId(incomingCall.meetingId);
+              setIncomingCall(null);
+            }}
+            onDecline={() => setIncomingCall(null)}
+          />
+        )}
 
         {activeVideoMeetingId && (
           <VideoConsultationRoom
