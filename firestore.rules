@@ -69,5 +69,13 @@ service cloud.firestore {
     match /auditLogs/{logId} {
       allow read, write: if true;
     }
+
+    // 11. WebRTC Video Calls collection
+    match /calls/{callId} {
+      allow read, write: if true;
+      match /{allSubcollections=**} {
+        allow read, write: if true;
+      }
+    }
   }
 }

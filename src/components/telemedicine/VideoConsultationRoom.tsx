@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { db } from '../../services/firebase';
+import { doc, setDoc, getDoc, updateDoc, onSnapshot, collection, addDoc } from 'firebase/firestore';
 import {
   Video,
   Mic,
@@ -14,7 +16,10 @@ import {
   MessageSquare,
   Copy,
   Check,
-  AlertCircle
+  AlertCircle,
+  ExternalLink,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 
 interface VideoConsultationRoomProps {
@@ -40,8 +45,9 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
   const [activeTab, setActiveTab] = useState<'chat' | 'notes' | 'patient_info'>('chat');
   const [callDuration, setCallDuration] = useState(0);
   const [connectionStatus, setConnectionStatus] = useState<'initializing' | 'waiting' | 'connected'>('initializing');
-  const [copiedMeetingId, setCopiedMeetingId] = useState(false);
+  const [copiedMeetingLink, setCopiedMeetingLink] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isSelfTestMode, setIsSelfTestMode] = useState(false);
 
   // Video element references
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -59,7 +65,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       id: 'welcome_msg',
       sender: 'System Telemedicine Bot',
       role: 'system',
-      text: `Encrypted WebRTC consultation room established. Meeting ID: ${meetingId}`,
+      text: `Encrypted WebRTC consultation room active. Meeting ID: ${meetingId}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -67,7 +73,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
 
   const currentAppointment = appointments.find(a => a.meetingId === meetingId) || appointments[0];
   const [consultationNotes, setConsultationNotes] = useState(
-    currentAppointment?.consultationNotes || 'Patient consultation in progress. Vitals reviewed.'
+    currentAppointment?.consultationNotes || 'Patient consultation in progress. Vitals and condition reviewed.'
   );
 
   // Call timer effect
@@ -84,55 +90,63 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Initialize Real Video Capture & WebRTC Signaling
+  // Build full meeting URL for sharing / opening second tab
+  const getMeetingUrl = () => {
+    const base = window.location.origin + window.location.pathname;
+    return `${base}?meeting=${encodeURIComponent(meetingId)}`;
+  };
+
+  // Helper to generate simulated video canvas if real webcam is not available or blocked
+  const createSimulatedMediaStream = (): MediaStream => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 480;
+    const ctx = canvas.getContext('2d')!;
+    let frame = 0;
+
+    const draw = () => {
+      frame++;
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(1, '#022c22');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      const radius = 40 + Math.sin(frame * 0.05) * 8;
+      ctx.arc(canvas.width / 2, canvas.height / 2 - 20, radius, 0, Math.PI * 2);
+      ctx.fillStyle = userRole === 'doctor' ? '#10b981' : '#0ea5e9';
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(currentUser?.displayName || (userRole === 'doctor' ? 'Dr. Rajesh Sharma' : 'Patient'), canvas.width / 2, canvas.height / 2 + 50);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px system-ui, sans-serif';
+      ctx.fillText('Live Telemedicine Video Feed', canvas.width / 2, canvas.height / 2 + 75);
+
+      requestAnimationFrame(draw);
+    };
+    draw();
+
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const dest = audioCtx.createMediaStreamDestination();
+
+    const videoStream = canvas.captureStream(25);
+    const combinedStream = new MediaStream([
+      ...videoStream.getVideoTracks(),
+      ...dest.stream.getAudioTracks()
+    ]);
+    return combinedStream;
+  };
+
+  // Initialize Real Video Capture & Dual Signaling (Firestore + BroadcastChannel)
   useEffect(() => {
     let isCancelled = false;
-
-    // Helper to generate simulated video canvas if real webcam is not available or blocked
-    const createSimulatedMediaStream = (): MediaStream => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 480;
-      const ctx = canvas.getContext('2d')!;
-      let frame = 0;
-
-      const draw = () => {
-        frame++;
-        const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        grad.addColorStop(0, '#0f172a');
-        grad.addColorStop(1, '#022c22');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.beginPath();
-        const radius = 40 + Math.sin(frame * 0.05) * 8;
-        ctx.arc(canvas.width / 2, canvas.height / 2 - 20, radius, 0, Math.PI * 2);
-        ctx.fillStyle = userRole === 'doctor' ? '#10b981' : '#0ea5e9';
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(currentUser?.displayName || (userRole === 'doctor' ? 'Dr. Rajesh Sharma' : 'Patient'), canvas.width / 2, canvas.height / 2 + 50);
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '14px system-ui, sans-serif';
-        ctx.fillText('Live Telemedicine Video Feed', canvas.width / 2, canvas.height / 2 + 75);
-
-        requestAnimationFrame(draw);
-      };
-      draw();
-
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const dest = audioCtx.createMediaStreamDestination();
-
-      const videoStream = canvas.captureStream(25);
-      const combinedStream = new MediaStream([
-        ...videoStream.getVideoTracks(),
-        ...dest.stream.getAudioTracks()
-      ]);
-      return combinedStream;
-    };
+    let unsubCallDoc: (() => void) | null = null;
+    let unsubCandidates: (() => void) | null = null;
 
     const setupMediaAndWebRTC = async () => {
       let stream: MediaStream;
@@ -149,8 +163,8 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
         });
         setCameraError(null);
       } catch (err: any) {
-        console.warn('Real webcam not found or permission denied, using live synthetic canvas stream:', err);
-        setCameraError('Webcam unavailable or permission blocked. Using live simulated video feed.');
+        console.warn('Real webcam not found or permission blocked, using simulated video stream:', err);
+        setCameraError('Physical webcam unavailable or permission blocked. Using live simulated video stream.');
         stream = createSimulatedMediaStream();
       }
 
@@ -162,13 +176,15 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       localStreamRef.current = stream;
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true;
       }
 
       // Initialize WebRTC RTCPeerConnection
       const configuration: RTCConfiguration = {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
         ]
       };
 
@@ -192,19 +208,19 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       };
 
       pc.oniceconnectionstatechange = () => {
-        if (pc.iceConnectionState === 'connected') {
+        if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
           setConnectionStatus('connected');
         } else if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
           setConnectionStatus('waiting');
         }
       };
 
-      // Set up BroadcastChannel for peer communication between tabs/windows on the same meeting ID
+      // 1. Channel A: BroadcastChannel (for same browser tabs)
       const channelName = `firstaid_video_${meetingId}`;
       const channel = new BroadcastChannel(channelName);
       broadcastChannelRef.current = channel;
 
-      // Listen for ICE candidates
+      // Handle ICE Candidates
       pc.onicecandidate = (event) => {
         if (event.candidate) {
           channel.postMessage({
@@ -212,10 +228,16 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
             candidate: event.candidate,
             senderRole: userRole
           });
+
+          // Also store candidate in Firestore if available
+          if (db) {
+            const candidateCol = collection(db, 'calls', meetingId, userRole === 'doctor' ? 'callerCandidates' : 'calleeCandidates');
+            addDoc(candidateCol, event.candidate.toJSON()).catch(() => null);
+          }
         }
       };
 
-      // Handle signaling messages over BroadcastChannel
+      // BroadcastChannel message handler
       channel.onmessage = async (event) => {
         const data = event.data;
         if (!data || data.senderRole === userRole) return;
@@ -223,7 +245,6 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
         try {
           if (data.type === 'peer-joined') {
             setConnectionStatus('connected');
-            // If we are doctor or first peer, create offer
             if (userRole === 'doctor') {
               const offer = await pc.createOffer();
               await pc.setLocalDescription(offer);
@@ -253,12 +274,85 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
           } else if (data.type === 'chat-message') {
             setChatMessages(prev => [...prev, data.message]);
           }
-        } catch (signalingErr) {
-          console.warn('WebRTC signaling event note:', signalingErr);
+        } catch (err) {
+          console.warn('BroadcastChannel signaling note:', err);
         }
       };
 
-      // Announce peer arrival
+      // 2. Channel B: Firestore Signaling (for cross-device / cross-browser connection)
+      if (db) {
+        try {
+          const callDocRef = doc(db, 'calls', meetingId);
+          const callSnap = await getDoc(callDocRef);
+
+          if (!callSnap.exists()) {
+            // First to join: Create Call Offer in Firestore
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+
+            await setDoc(callDocRef, {
+              offer: { type: offer.type, sdp: offer.sdp },
+              callerRole: userRole,
+              callerName: currentUser?.displayName || 'User',
+              createdAt: new Date().toISOString()
+            });
+
+            // Listen for Callee Answer
+            unsubCallDoc = onSnapshot(callDocRef, async (snap) => {
+              const d = snap.data();
+              if (d?.answer && !pc.currentRemoteDescription) {
+                await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+                setConnectionStatus('connected');
+              }
+            });
+
+            // Listen for Callee ICE Candidates
+            const calleeCandidatesCol = collection(db, 'calls', meetingId, 'calleeCandidates');
+            unsubCandidates = onSnapshot(calleeCandidatesCol, (snapshot) => {
+              snapshot.docChanges().forEach(async (change) => {
+                if (change.type === 'added') {
+                  const cData = change.doc.data();
+                  if (pc.remoteDescription) {
+                    await pc.addIceCandidate(new RTCIceCandidate(cData));
+                  }
+                }
+              });
+            });
+          } else {
+            // Second to join: Answer existing offer in Firestore
+            const callData = callSnap.data();
+            if (callData?.offer && !pc.currentRemoteDescription) {
+              await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+
+              await updateDoc(callDocRef, {
+                answer: { type: answer.type, sdp: answer.sdp },
+                calleeRole: userRole,
+                calleeName: currentUser?.displayName || 'User'
+              });
+              setConnectionStatus('connected');
+            }
+
+            // Listen for Caller ICE Candidates
+            const callerCandidatesCol = collection(db, 'calls', meetingId, 'callerCandidates');
+            unsubCandidates = onSnapshot(callerCandidatesCol, (snapshot) => {
+              snapshot.docChanges().forEach(async (change) => {
+                if (change.type === 'added') {
+                  const cData = change.doc.data();
+                  if (pc.remoteDescription) {
+                    await pc.addIceCandidate(new RTCIceCandidate(cData));
+                  }
+                }
+              });
+            });
+          }
+        } catch (dbErr) {
+          console.warn('Firestore signaling note (BroadcastChannel remains active):', dbErr);
+        }
+      }
+
+      // Announce peer arrival on BroadcastChannel
       channel.postMessage({
         type: 'peer-joined',
         senderRole: userRole
@@ -280,6 +374,8 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       if (broadcastChannelRef.current) {
         broadcastChannelRef.current.close();
       }
+      if (unsubCallDoc) unsubCallDoc();
+      if (unsubCandidates) unsubCandidates();
     };
   }, [meetingId, userRole]);
 
@@ -348,6 +444,36 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
     setIsScreenSharing(false);
   };
 
+  // Instant loopback test (mirrors local video to remote screen so user can test 2-way UI immediately)
+  const toggleLoopbackTest = () => {
+    if (!isSelfTestMode) {
+      if (remoteVideoRef.current && localStreamRef.current) {
+        remoteVideoRef.current.srcObject = localStreamRef.current;
+      }
+      setConnectionStatus('connected');
+      setIsSelfTestMode(true);
+    } else {
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      }
+      setConnectionStatus(remoteStreamRef.current ? 'connected' : 'waiting');
+      setIsSelfTestMode(false);
+    }
+  };
+
+  // Open Second Participant Tab (Test Call)
+  const openSecondParticipantWindow = () => {
+    const url = getMeetingUrl();
+    window.open(url, '_blank', 'width=1100,height=750');
+  };
+
+  // Copy Meeting Link
+  const copyMeetingLink = () => {
+    navigator.clipboard.writeText(getMeetingUrl());
+    setCopiedMeetingLink(true);
+    setTimeout(() => setCopiedMeetingLink(false), 2500);
+  };
+
   // Send In-Call Chat Message
   const handleSendMessage = () => {
     if (!inputMsg.trim()) return;
@@ -362,7 +488,6 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
 
     setChatMessages(prev => [...prev, newMsg]);
 
-    // Broadcast to peer
     if (broadcastChannelRef.current) {
       broadcastChannelRef.current.postMessage({
         type: 'chat-message',
@@ -384,11 +509,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
     onEndCall();
   };
 
-  const copyMeetingId = () => {
-    navigator.clipboard.writeText(meetingId);
-    setCopiedMeetingId(true);
-    setTimeout(() => setCopiedMeetingId(false), 2000);
-  };
+  const isConnected = connectionStatus === 'connected';
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col text-white animate-fade-in font-sans">
@@ -401,19 +522,24 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-black text-sm text-white">Live Telemedicine Video Consultation</h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/30 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                WebRTC Real-Time
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono border font-bold flex items-center gap-1 ${
+                isConnected
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+                {isConnected ? '2-Way Live Connected' : 'Waiting for Peer to Join'}
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-400">
               <span>Room ID: <strong className="font-mono text-emerald-300">{meetingId}</strong></span>
               <button
-                onClick={copyMeetingId}
-                className="hover:text-white transition-colors cursor-pointer"
-                title="Copy Room ID"
+                onClick={copyMeetingLink}
+                className="hover:text-white transition-colors cursor-pointer text-[11px] text-emerald-400 flex items-center gap-1"
+                title="Copy Full Invite Link"
               >
-                {copiedMeetingId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedMeetingLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedMeetingLink ? 'Link Copied!' : 'Copy Link'}</span>
               </button>
               <span>•</span>
               <span className="text-emerald-400 font-mono font-bold">⏱️ {formatDuration(callDuration)}</span>
@@ -421,16 +547,29 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Connection status indicator */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs">
-            <span className={`w-2.5 h-2.5 rounded-full ${
-              connectionStatus === 'connected' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400 animate-pulse'
-            }`} />
-            <span className="text-slate-300 font-medium">
-              {connectionStatus === 'connected' ? 'Connected (2-Way Live Stream)' : 'Waiting for Peer to Join...'}
-            </span>
-          </div>
+        <div className="flex items-center gap-2.5">
+          {/* Quick Test Actions */}
+          <button
+            onClick={openSecondParticipantWindow}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+            title="Open second participant tab to test 2-way call immediately"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Open Test Tab</span>
+          </button>
+
+          <button
+            onClick={toggleLoopbackTest}
+            className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              isSelfTestMode
+                ? 'bg-emerald-600 text-white border-emerald-500'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+            title="Mirror local feed to test video rendering immediately"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSelfTestMode ? 'animate-spin' : ''}`} />
+            <span>{isSelfTestMode ? 'Self-Test Active' : 'Test Loopback'}</span>
+          </button>
 
           <button
             onClick={handleEndCallInternal}
@@ -449,7 +588,7 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
             <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
             <span>{cameraError}</span>
           </div>
-          <span className="text-[10px] text-amber-400 font-mono uppercase font-bold">Live Stream Active</span>
+          <span className="text-[10px] text-amber-400 font-mono uppercase font-bold">Simulated Camera Active</span>
         </div>
       )}
 
@@ -457,75 +596,119 @@ export const VideoConsultationRoom: React.FC<VideoConsultationRoomProps> = ({ me
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         {/* Left 8 Cols: Real Video Viewport */}
         <div className="lg:col-span-8 bg-slate-900 p-4 sm:p-6 flex flex-col justify-between relative border-r border-slate-800">
-          {/* Main Remote Video Stream Stage */}
+          {/* Main Stage */}
           <div className="relative flex-1 rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex items-center justify-center">
-            {/* REAL REMOTE VIDEO ELEMENT */}
+            {/* 1. REMOTE PEER VIDEO (Visible when connected) */}
             <video
               ref={remoteVideoRef}
               autoPlay
               playsInline
-              className={`w-full h-full object-cover ${connectionStatus === 'connected' ? 'block' : 'hidden'}`}
+              className={`w-full h-full object-cover ${isConnected ? 'block' : 'hidden'}`}
             />
 
-            {/* Waiting for remote peer overlay */}
-            {connectionStatus !== 'connected' && (
-              <div className="text-center space-y-4 p-6 max-w-md">
-                <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto animate-pulse shadow-inner">
-                  <Video className="w-10 h-10" />
+            {/* 2. LOCAL CAMERA PREVIEW ON MAIN SCREEN (Visible while waiting for peer) */}
+            {!isConnected && (
+              <div className="relative w-full h-full">
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-cover ${isVideoOn ? 'block' : 'hidden'}`}
+                />
+
+                {!isVideoOn && (
+                  <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center text-slate-500 space-y-2">
+                    <VideoOff className="w-12 h-12 text-rose-500" />
+                    <span className="text-sm font-bold text-slate-400">Camera is Paused</span>
+                  </div>
+                )}
+
+                {/* Waiting & Testing Helper Overlay Card */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6 sm:p-8 space-y-4">
+                  <div className="max-w-xl space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Your Live Camera & Microphone Are Ready</span>
+                    </div>
+
+                    <h3 className="text-2xl font-black text-white">
+                      {userRole === 'doctor'
+                        ? 'Waiting for Patient to Connect...'
+                        : 'Waiting for Dr. Rajesh Sharma to Join...'}
+                    </h3>
+
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      You are in room <strong className="font-mono text-emerald-300">{meetingId}</strong>.
+                      To start a 2-way video conversation with the {userRole === 'doctor' ? 'patient' : 'doctor'}, open the meeting link in another window, or click the test button below:
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        onClick={openSecondParticipantWindow}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Open 2nd Window (Test Live Call)</span>
+                      </button>
+
+                      <button
+                        onClick={copyMeetingLink}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition-all cursor-pointer"
+                      >
+                        {copiedMeetingLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        <span>{copiedMeetingLink ? 'Copied Full Link!' : 'Copy Invite Link'}</span>
+                      </button>
+
+                      <button
+                        onClick={toggleLoopbackTest}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600/80 hover:bg-indigo-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Instant 2-Way Loopback</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-black text-white">
-                    {userRole === 'doctor' ? 'Waiting for Patient to Connect...' : 'Waiting for Doctor to Join...'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Both parties join using Meeting ID: <strong className="font-mono text-emerald-300">{meetingId}</strong>.
-                    When testing in two tabs/windows, both streams connect live over WebRTC.
-                  </p>
-                </div>
-                <button
-                  onClick={copyMeetingId}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold rounded-xl border border-slate-700 transition-all cursor-pointer"
-                >
-                  {copiedMeetingId ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedMeetingId ? 'Copied Meeting ID!' : 'Copy Meeting Invite ID'}</span>
-                </button>
               </div>
             )}
 
-            {/* Remote Peer Name Badge */}
-            <div className="absolute top-4 left-4 bg-slate-900/85 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-700 text-xs font-bold flex items-center gap-2 shadow-lg">
-              <span className={`w-2.5 h-2.5 rounded-full ${
-                connectionStatus === 'connected' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400 animate-pulse'
-              }`} />
-              <span>
-                {userRole === 'doctor'
-                  ? `${currentAppointment?.patientName || 'Sarah Jenkins'} (Patient)`
-                  : `${currentAppointment?.doctorName || 'Dr. Rajesh Sharma'} (${currentAppointment?.doctorSpecialization || 'Doctor'})`}
-              </span>
-            </div>
-
-            {/* 👤 REAL LOCAL SELF CAMERA PIP (PICTURE-IN-PICTURE) */}
-            <div className="absolute bottom-4 right-4 w-44 sm:w-56 h-32 sm:h-40 rounded-2xl overflow-hidden border-2 border-emerald-500/80 shadow-2xl bg-slate-900">
-              <video
-                ref={localVideoRef}
-                autoPlay
-                playsInline
-                muted
-                className={`w-full h-full object-cover ${isVideoOn ? 'block' : 'hidden'}`}
-              />
-
-              {!isVideoOn && (
-                <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-500 space-y-1">
-                  <VideoOff className="w-8 h-8 text-rose-500" />
-                  <span className="text-[10px] text-slate-400 font-bold">Camera Paused</span>
-                </div>
-              )}
-
-              <div className="absolute bottom-1.5 left-2 text-[10px] bg-slate-900/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-white font-mono font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>You ({currentUser?.displayName || userRole})</span>
+            {/* Remote Peer Name Badge (when connected) */}
+            {isConnected && (
+              <div className="absolute top-4 left-4 bg-slate-900/85 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-slate-700 text-xs font-bold flex items-center gap-2 shadow-lg">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>
+                  {userRole === 'doctor'
+                    ? `${currentAppointment?.patientName || 'Sarah Jenkins'} (Patient)`
+                    : `${currentAppointment?.doctorName || 'Dr. Rajesh Sharma'} (${currentAppointment?.doctorSpecialization || 'Cardiologist'})`}
+                </span>
               </div>
-            </div>
+            )}
+
+            {/* 👤 LOCAL SELF CAMERA PIP (WHEN CONNECTED TO REMOTE PEER) */}
+            {isConnected && (
+              <div className="absolute bottom-4 right-4 w-44 sm:w-56 h-32 sm:h-40 rounded-2xl overflow-hidden border-2 border-emerald-500/80 shadow-2xl bg-slate-900">
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`w-full h-full object-cover ${isVideoOn ? 'block' : 'hidden'}`}
+                />
+
+                {!isVideoOn && (
+                  <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-500 space-y-1">
+                    <VideoOff className="w-8 h-8 text-rose-500" />
+                    <span className="text-[10px] text-slate-400 font-bold">Camera Paused</span>
+                  </div>
+                )}
+
+                <div className="absolute bottom-1.5 left-2 text-[10px] bg-slate-900/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-white font-mono font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>You ({currentUser?.displayName || userRole})</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 🎛️ FLOATING REAL-TIME MEDIA CONTROL BAR */}

@@ -64,6 +64,20 @@ const MainContent: React.FC = () => {
   const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
   const [activeVideoMeetingId, setActiveVideoMeetingId] = useState<string | null>(null);
 
+  // Auto-launch video room if URL contains ?meeting=... or ?call=...
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const meetId = params.get('meeting') || params.get('call');
+      if (meetId) {
+        setActiveVideoMeetingId(meetId);
+      }
+    } catch (e) {
+      console.warn('URL search params parse note:', e);
+    }
+  }, []);
+
+
   const handleBookingSuccess = () => {
     confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
     setActiveTab('appointments');
